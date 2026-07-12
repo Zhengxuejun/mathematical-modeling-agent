@@ -1,9 +1,9 @@
 {
   "name": "mathematical-modeling-agent",
   "version": "1.2.0",
-  "created_at": "2026-07-12T12:04:42",
+  "created_at": "2026-07-12T12:56:53",
   "distribution": "portable Hermes skill package",
-  "file_count": 80,
+  "file_count": 81,
   "excluded": [
     ".git",
     ".pytest_cache",
@@ -46,6 +46,11 @@
       "path": "SKILL.md",
       "bytes": 29763,
       "sha256": "8f492adcbe1498c88334435cbcd1effd1b5625bf42a907611442e3bb697d8a08"
+    },
+    {
+      "path": "docs/collaboration-ci-design.md",
+      "bytes": 3752,
+      "sha256": "b5f2fd564ca2cdbf681ab47889ec874f96e7441eeee01dbf28bdea2dedcf324c"
     },
     {
       "path": "references/automation-workflow.md",
