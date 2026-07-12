@@ -73,20 +73,20 @@ python 02_代码/08_pipeline.py --report 05_报告定稿/report.md --zip
 2. model_skeleton / domain_checker_templates
    根据题目解析路由模型骨架，并生成不可冒充正式证据的 checker 起点
 
-3. quality_gate / report_audit / state_update_pre_finalize
-   运行基础质量门禁、报告-结果审计并记录打包前状态
+3. quality_gate / quality_gate_plus / problem_coverage
+   检查基础产物、结果表质量、逐问覆盖和状态一致性
 
-4. finalize / state_update_final
-   生成提交包并重新识别 S8
+4. result_interpretation / report_assembly / report_audit
+   生成逐问解释与证据优先报告，并核对报告、结果、图表和数值
 
-5. quality_gate_plus / problem_coverage / result_interpretation / report_assembly
-   审查结果表、逐问覆盖、解释草稿和报告证据骨架
+5. state_update_pre_finalize / contest_evidence_sync / contest_qc
+   记录打包前状态，同步待审核证据候选，并运行所选 Contest QC 阶段
 
-6. contest_qc
-   运行 `contest_qc_gate.py --phase final`，检查交付物锁定、真实数据 PoC、模型交接、数学核验、可复现 run、主张/图表证据、P0/P1 风险和提交合规
+6. competition_evidence / repair_advisor / competition_readiness
+   生成模型证据索引、最小修复路径和 workflow/model/competition 三层就绪度
 
-7. repair_advisor / competition_evidence / competition_readiness
-   汇总最小修复路径、自动证据索引和 workflow/model/competition 三层就绪度
+7. finalize / state_update_final
+   仅当 `final_ready` 和 `competition_ready` 同时成立时发布提交包，并重新识别 S8
 ```
 
 可跳过项：
