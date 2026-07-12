@@ -1,4 +1,4 @@
-# 安装说明：数学建模智能体 v1.2.0
+# 安装说明：数学建模智能体 v1.3.0
 
 ## 安装到 Hermes
 
@@ -28,4 +28,4 @@ python 02_代码/17_contest_qc.py --phase early
 - `final_ready` 与 `competition_ready` 是证据与就绪度状态，不承诺获奖。
 - 终稿前应填充真实附件 PoC、可复现 run、结果/图表/主张映射以及当前规则、匿名和 AI 披露要求。
 - 本包排除测试缓存、字节码和本机绝对路径；项目包装脚本会自动绑定安装后的 skill 路径。
-- 本仓库内容使用 MIT License；上游研究项目材料不适用本仓库授权，详见 `NOTICE`。
+- 当前仓库内容使用 Mozilla Public License 2.0；上游研究项目材料不适用本仓库授权，详见 `NOTICE`。

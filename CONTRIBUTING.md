@@ -2,6 +2,8 @@
 
 感谢改进 Mathematical Modeling Agent。默认协作方式是 feature branch 或 fork 加 pull request，不直接向 `main` 推送未经验证的修改。
 
+除非 pull request 中另有明确且经维护者接受的书面说明，所有贡献均按 Mozilla Public License 2.0 提交并授权。
+
 ## 开发流程
 
 1. 从最新 `main` 创建范围明确的分支。
@@ -29,4 +31,3 @@
 ## Commit 与 Pull Request
 
 Commit 应使用清晰的命令式摘要。Pull request 应保持单一目的，避免混入无关格式化或大范围重构。评审重点依次是行为正确性、证据完整性、回归风险和测试覆盖。
-
