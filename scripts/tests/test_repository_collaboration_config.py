@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -29,14 +30,33 @@ def test_public_collaboration_documents_exist() -> None:
     assert "contest attachments" in security.lower()
 
 
-def test_public_copyright_holder_is_correct() -> None:
+def test_public_license_and_copyright_are_current() -> None:
     license_text = (ROOT / "LICENSE").read_text(encoding="utf-8")
     notice = (ROOT / "NOTICE").read_text(encoding="utf-8")
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
-    incorrect_name = "郑学" + "军"
-    for text in (license_text, notice, readme):
-        assert "郑学君" in text
-        assert incorrect_name not in text
+    skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+    install = (ROOT / "INSTALL.md").read_text(encoding="utf-8")
+    contributing = (ROOT / "CONTRIBUTING.md").read_text(encoding="utf-8")
+
+    assert "Mozilla Public License Version 2.0" in license_text
+    assert "Copyright (c) 2026 Zhengxuejun" in notice
+    assert "Zhengxuejun" in readme
+    assert "license: MPL-2.0" in skill
+    assert "Mozilla Public License 2.0" in install
+    assert "Mozilla Public License 2.0" in contributing
+    for text in (readme, skill, install):
+        assert "采用 [MIT License]" not in text
+        assert "使用 MIT License" not in text
+
+
+def test_public_release_versions_are_consistent() -> None:
+    manifest = json.loads((ROOT / "PACKAGE_MANIFEST.json").read_text(encoding="utf-8"))
+    assert manifest["version"] == "1.3.0"
+    assert "当前版本：`1.3.0`" in (ROOT / "README.md").read_text(encoding="utf-8")
+    assert "version: 1.3.0" in (ROOT / "SKILL.md").read_text(encoding="utf-8")
+    assert (ROOT / "RELEASE_NOTES.md").read_text(encoding="utf-8").startswith(
+        "# 数学建模智能体 v1.3.0\n"
+    )
 
 
 def test_readme_links_collaboration_policies() -> None:

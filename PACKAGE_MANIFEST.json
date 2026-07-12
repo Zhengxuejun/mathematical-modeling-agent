@@ -1,7 +1,7 @@
 {
   "name": "mathematical-modeling-agent",
-  "version": "1.2.0",
-  "created_at": "2026-07-12T23:29:12",
+  "version": "1.3.0",
+  "created_at": "2026-07-12T23:52:24",
   "distribution": "portable Hermes skill package",
   "file_count": 158,
   "excluded": [
@@ -24,33 +24,33 @@
     },
     {
       "path": "CONTRIBUTING.md",
-      "bytes": 1656,
-      "sha256": "f3ada0e4c66f764893c33257360c56d96baf1b0310edd42c0c4d31082b6fc2a5"
+      "bytes": 1795,
+      "sha256": "5d4d3c1febb9030907c8b7053b8436ac745483c3c988d28613f7ecaf81696e59"
     },
     {
       "path": "INSTALL.md",
-      "bytes": 1063,
-      "sha256": "7839b6b075273af51d8c0d5a54a37f76ba9643f2eb398d9288426b9df3d9c423"
+      "bytes": 1081,
+      "sha256": "f093d793e708d2913dda467d4b27486fea8f541ca284e3303836e718b3656fef"
     },
     {
       "path": "LICENSE",
-      "bytes": 1066,
-      "sha256": "471211cd6ff3808e33549ffb3f270b4b3ad1cf9b4e84c5f1754d5d6e209a0333"
+      "bytes": 16726,
+      "sha256": "3f3d9e0024b1921b067d6f7f88deb4a60cbe7a78e76c64e3f1d7fc3b779b9d04"
     },
     {
       "path": "NOTICE",
-      "bytes": 1029,
-      "sha256": "640a756c176c5d0e371acf796ecd34826e74960a55b039fc580eeac2853ff377"
+      "bytes": 1261,
+      "sha256": "459b287ae79ee50b7c2ac5866dd0f98cc6f03766f63d72d869fb7b8ae011f897"
     },
     {
       "path": "README.md",
-      "bytes": 6815,
-      "sha256": "8d962fe4bae7c069b8e223943feca648af8c157fea97a788561a1f62e9e3c3da"
+      "bytes": 6899,
+      "sha256": "53312d6fa70792cef79ac62d96583983abbe35d1dc47fa68a21064f6cef2d19f"
     },
     {
       "path": "RELEASE_NOTES.md",
-      "bytes": 2594,
-      "sha256": "e0f7404cbfa6ec1cf6c36c91e5894820f665289877782c44d3004d8feb07620b"
+      "bytes": 2650,
+      "sha256": "e70e98fe16f52d65ca2bfbc60e123ccf60ad4f3bafa149ffa12fc4c715d59f2a"
     },
     {
       "path": "SECURITY.md",
@@ -59,8 +59,8 @@
     },
     {
       "path": "SKILL.md",
-      "bytes": 31586,
-      "sha256": "1b69fa1554754cd52411f6397577793b87c6003c4de40bec105d5e8d4f279d3e"
+      "bytes": 31594,
+      "sha256": "bf33eac19440eaa04e0360705a0bb5d028c91e692c73eed8f66a876a3c6b596a"
     },
     {
       "path": "benchmarks/cases/evaluation_rank_stability/case.json",
@@ -779,8 +779,8 @@
     },
     {
       "path": "scripts/tests/test_repository_collaboration_config.py",
-      "bytes": 3308,
-      "sha256": "f3c13877cdf9db797ee25857a100681e25e3136c29bba2aa9a2f24e566759599"
+      "bytes": 4287,
+      "sha256": "d242789e79ff4f0f2279b0b177f657a7f2a6f76fe4e30ccc11467808d203a33a"
     },
     {
       "path": "scripts/tests/test_submission_package_contract.py",

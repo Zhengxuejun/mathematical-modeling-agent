@@ -1,9 +1,9 @@
 ---
 name: mathematical-modeling-agent
 description: "数学建模智能体工作流：把开放式建模题转化为可验证的模型、代码、图表与论文/报告。吸收 MM-Agent/LLM-MM-Agent 的四阶段流程、HMML 方法检索思想与子任务 DAG 思维。"
-version: 1.2.0
+version: 1.3.0
 author: HM-AI
-license: MIT
+license: MPL-2.0
 metadata:
   hermes:
     tags: [mathematical-modeling, mcm, icm, optimization, data-analysis, report-writing, python, modeling-agent]
@@ -13,7 +13,7 @@ metadata:
 
 # Mathematical Modeling Agent / 数学建模智能体
 
-本项目是独立实现，工作流层面参考公开研究项目 `usail-hkust/LLM-MM-Agent`，不包含其源码、数据集、提示词、模型权重或媒体资源。仓库内 MIT 许可证仅适用于本仓库内容；复制上游材料时必须单独核对其当前许可条款。详见 `NOTICE`。
+本项目是独立实现，工作流层面参考公开研究项目 `usail-hkust/LLM-MM-Agent`，不包含其源码、数据集、提示词、模型权重或媒体资源。仓库内 MPL-2.0 许可证仅适用于本仓库内容；复制上游材料时必须单独核对其当前许可条款。详见 `NOTICE`。
 
 ## 配套引用文件
 

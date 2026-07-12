@@ -1,5 +1,5 @@
 Mathematical Modeling Agent
-Copyright (c) 2026 郑学君
+Copyright (c) 2026 Zhengxuejun
 
 This repository is an independent implementation of a competition-oriented
 mathematical-modeling workflow. Its high-level workflow was informed by public
@@ -11,8 +11,11 @@ This repository does not intentionally include or redistribute source code,
 datasets, prompts, model weights, or media assets from that upstream project.
 The upstream project's own license and README have presented different license
 labels over time; anyone copying upstream material must review the upstream
-terms directly. The MIT License in this repository applies only to the content
-distributed in this repository.
+terms directly. The current Source Code Form in this repository is distributed
+under the Mozilla Public License, v. 2.0, unless otherwise noted. Repository
+versions previously published under the MIT License retain their existing MIT
+grants. Neither license statement covers upstream materials that are not
+redistributed by this repository.
 
 The phrase "AIDE-style candidate solution tree" describes the general pattern
 of retaining and evaluating parent-child solution experiments. The candidate
