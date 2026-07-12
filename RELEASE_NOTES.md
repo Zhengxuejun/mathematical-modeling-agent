@@ -16,3 +16,4 @@
 - 新增 `candidate_solution_tree.py`：以有限节点/深度记录 baseline 和父子改进分支，验证输入与证据哈希、运行、可行性和验证结果，并支持同 case Benchmark 下的确定性选优。
 - 候选树不执行记录命令；不同输入快照或不同 Benchmark case 拒绝比较，`selected` 不会写入 Contest QC、S0-S8、提交包或 `competition_ready`。
 - README 新增端到端比赛工作流图和状态边界表，并增加 `docs/competition-workflow.md`，集中说明候选开发、Pipeline 真实顺序、门禁、修复回路和 72 小时比赛节奏。
+- 更正 LICENSE、NOTICE 与 README 中的版权所有者姓名为“郑学君”。
