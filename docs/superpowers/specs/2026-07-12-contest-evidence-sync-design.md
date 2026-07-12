@@ -56,7 +56,7 @@ It does not synthesize `math_verification.csv`, `claim_ledger.csv`, review
 findings, compliance declarations, or completed run records because those
 require semantic or execution evidence.
 
-Every execution writes:
+Every non-dry-run execution writes:
 
 - `06_过程记录/竞赛质控/evidence_sync.json`;
 - `06_过程记录/竞赛质控/evidence_sync.md`.
@@ -93,8 +93,9 @@ post-figure conclusion, render status, and human visual status remain empty.
 ### Stable Identity
 
 Identity is based on normalized project-relative paths for files and normalized
-question IDs for deliverables. Generated IDs use a short deterministic SHA-256
-suffix so repeated runs and Python versions produce identical rows.
+question IDs for deliverables. Recognized question IDs remain readable, such as
+`D-Q1`; file-backed IDs and fallback question IDs use a short deterministic
+SHA-256 suffix so repeated runs and Python versions produce identical rows.
 
 ## Merge And Safety Policy
 
