@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import json
 import subprocess
 import sys
@@ -109,6 +110,15 @@ def test_full_competition_pipeline_publishes_latest_verified_report(tmp_path: Pa
     assert summary["recommended_status"] == "completed"
     assert summary["contest_qc_readiness"] == "final_ready"
     assert summary["competition_ready"] is True
+    assert summary["evidence_sync_status"] == "candidates_synced"
+    assert summary["evidence_sync_counts"]["added"] > 0
+    qc = project / "06_过程记录/竞赛质控"
+    with (qc / "result_registry.csv").open("r", encoding="utf-8-sig", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    trusted = next(row for row in rows if row["source_table"] == "03_结果表格/result.csv")
+    candidate = next(row for row in rows if row["source_table"] == "03_结果表格/model_results.csv")
+    assert trusted["validation_status"] == "paper_ready"
+    assert candidate["validation_status"] == "candidate"
 
 
 def test_open_p1_risk_blocks_finalizer_and_new_manifest(tmp_path: Path) -> None:
@@ -145,3 +155,30 @@ def test_open_p1_risk_blocks_finalizer_and_new_manifest(tmp_path: Path) -> None:
     finalize = next(step for step in summary["steps"] if step["name"] == "finalize")
     assert finalize["skipped"]
     assert "contest QC is not final_ready" in finalize["reason"]
+
+
+def test_evidence_sync_failure_skips_contest_qc_and_finalizer(tmp_path: Path) -> None:
+    project = make_competition_project(tmp_path)
+    qc = project / "06_过程记录/竞赛质控"
+    (qc / "result_registry.csv").write_text("wrong,header\na,b\n", encoding="utf-8")
+    command = [
+        sys.executable,
+        str(SCRIPT_DIR / "modeling_pipeline.py"),
+        str(project),
+        "--entry",
+        "02_代码/solve.py",
+        "--report",
+        "05_报告定稿/report_draft.md",
+    ]
+
+    result = subprocess.run(command, text=True, capture_output=True, timeout=60)
+
+    assert result.returncode == 1
+    summary = json.loads((project / "06_过程记录/pipeline/pipeline_run_summary.json").read_text(encoding="utf-8"))
+    sync = next(step for step in summary["steps"] if step["name"] == "contest_evidence_sync")
+    contest_qc = next(step for step in summary["steps"] if step["name"] == "contest_qc")
+    finalize = next(step for step in summary["steps"] if step["name"] == "finalize")
+    assert sync["exit_code"] == 2
+    assert contest_qc["skipped"]
+    assert contest_qc["reason"] == "contest evidence synchronization failed"
+    assert finalize["skipped"]
