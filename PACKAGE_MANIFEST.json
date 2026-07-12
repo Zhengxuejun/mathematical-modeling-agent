@@ -1,0 +1,416 @@
+{
+  "name": "mathematical-modeling-agent",
+  "version": "1.2.0",
+  "created_at": "2026-07-12T12:04:42",
+  "distribution": "portable Hermes skill package",
+  "file_count": 80,
+  "excluded": [
+    ".git",
+    ".pytest_cache",
+    "__pycache__",
+    ".DS_Store"
+  ],
+  "sanitization": "All readable source/docs checked for the local absolute home path before archive creation.",
+  "files": [
+    {
+      "path": ".gitignore",
+      "bytes": 62,
+      "sha256": "dac2200506b774468de747a33bcfece13287a06ad591a3b0f03c995da2f601ef"
+    },
+    {
+      "path": "INSTALL.md",
+      "bytes": 1063,
+      "sha256": "7839b6b075273af51d8c0d5a54a37f76ba9643f2eb398d9288426b9df3d9c423"
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 1069,
+      "sha256": "4c52a8e9d81c3afb5a25c5690d30dfadb020613832383e26966bda187b41d56a"
+    },
+    {
+      "path": "NOTICE",
+      "bytes": 720,
+      "sha256": "07dabe5e88dea704dadf0b092b96e49b04072d400405416d0e99ce2d2e9229be"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2210,
+      "sha256": "ab47d48294af38e3b7789f6e1ba7800df5395facdf1b886df50106c1eef080dc"
+    },
+    {
+      "path": "RELEASE_NOTES.md",
+      "bytes": 1036,
+      "sha256": "1eddff41496c0fa42942669e40baca4360898faeb7a713b910b32b5ec3e6e484"
+    },
+    {
+      "path": "SKILL.md",
+      "bytes": 29763,
+      "sha256": "8f492adcbe1498c88334435cbcd1effd1b5625bf42a907611442e3bb697d8a08"
+    },
+    {
+      "path": "references/automation-workflow.md",
+      "bytes": 4326,
+      "sha256": "69461399f2e9befd3e9bbed2748be4d44b5aebad96fb6c5e1a255c98b95c542b"
+    },
+    {
+      "path": "references/biostatistics-and-screening.md",
+      "bytes": 5151,
+      "sha256": "a94c7e6d89c349f87ea9af91e87305d110381d262757e381b825061663f28576"
+    },
+    {
+      "path": "references/case-study-cumcm-2024-c-crop-strategy-20260523.md",
+      "bytes": 6005,
+      "sha256": "ef5db527cf8709a56801ef4806e934db29bc601489f9b5482677e5f75a9a9d8f"
+    },
+    {
+      "path": "references/case-study-cumcm-2025-c-nipt.md",
+      "bytes": 4463,
+      "sha256": "99b9bde51a9df7c46ea47461f79a4a699badb632db5b5e4bf6d186012e4fb03e"
+    },
+    {
+      "path": "references/case-study-huazhong-green-logistics-vrp-20260522.md",
+      "bytes": 6454,
+      "sha256": "3335f0f979fd7317b7e07e12139d05b68877c743705ce67d2fc13e34ea381991"
+    },
+    {
+      "path": "references/case-study-index.md",
+      "bytes": 2807,
+      "sha256": "fdfe107d8e0c7a47020c99399ca23bd7a4669ddaeb7ecf0088322c36a4bd5e92"
+    },
+    {
+      "path": "references/case-study-mcm-2024-c-tennis-20260522.md",
+      "bytes": 2877,
+      "sha256": "30ed945835a444a6ba79d827a92b2baae6a2294055021c4394ecee305484eda7"
+    },
+    {
+      "path": "references/competition-evidence-builder.md",
+      "bytes": 2418,
+      "sha256": "db2e76b11f72f8e46a1bf8b82c0ebcd0383c6652ae3fc1b01468797a40953019"
+    },
+    {
+      "path": "references/competition-evidence-checker-link.md",
+      "bytes": 2114,
+      "sha256": "133ef34f057e9d32691d3fe2d1d984e0ad4f6b4ddde4b9c49cb24d8c47d1aab9"
+    },
+    {
+      "path": "references/competition-playbook.md",
+      "bytes": 7111,
+      "sha256": "f304d1d498904116c946ad85289b100088c7bbaad76ee5e21e42045654b970fe"
+    },
+    {
+      "path": "references/competition-readiness-gate.md",
+      "bytes": 3922,
+      "sha256": "33503a10afbb32bda3e6e542ca25bfe778f1e10d9f965f6b713fa923c7979ed5"
+    },
+    {
+      "path": "references/contest-qc-integration-audit-20260711.md",
+      "bytes": 3968,
+      "sha256": "161484c339775bae3812ec6194548782a0e131aabd7a5f8cb4c6a8cc3338531b"
+    },
+    {
+      "path": "references/contest-quality-gate.md",
+      "bytes": 5195,
+      "sha256": "81c5073e61bfa972634cac68cb3f0a3317c5c0db35ab54775d0e981983622361"
+    },
+    {
+      "path": "references/continuous-optimization-notes.md",
+      "bytes": 16993,
+      "sha256": "7554fc0d25facf6e5990dacf33ce660447b01dd16b3e05b3b8a219f9e811e050"
+    },
+    {
+      "path": "references/domain-checker-template-builder.md",
+      "bytes": 2907,
+      "sha256": "22137322fe09ac0c54807a3030553bece870d04da71738636ad1721d3f2c1e47"
+    },
+    {
+      "path": "references/llm-wiki-mathematical-modeling-agent-page.md",
+      "bytes": 2457,
+      "sha256": "18b61cedc9bb18ce2f88d54a6aa42b3bfad573f505e70d0650fc123a6bbd5dd9"
+    },
+    {
+      "path": "references/model-library.md",
+      "bytes": 7798,
+      "sha256": "de6122d38447440186baf6588d59fd3e131d4f8e1a3818fe03890d6f9a18d316"
+    },
+    {
+      "path": "references/model-skeleton-router.md",
+      "bytes": 2609,
+      "sha256": "a568c63d12eadf6441fcd27a891402cdb91986ebd1d366fca586ec29804f15dc"
+    },
+    {
+      "path": "references/modeling-failure-patterns.md",
+      "bytes": 4707,
+      "sha256": "b6785daaf369591a24438a5ff4a7936b797621eb03440eb1664234436bfc45fc"
+    },
+    {
+      "path": "references/pipeline-runner.md",
+      "bytes": 5302,
+      "sha256": "5e54373140c960d559f3631f7e8ac1822a1e90ca8fd4874628c9cc4f157d76dc"
+    },
+    {
+      "path": "references/problem-coverage-tracker.md",
+      "bytes": 3818,
+      "sha256": "70f29996f2f219b3f101cf8bd079fdd4b25257bc244cdf8ceceea35594e970ef"
+    },
+    {
+      "path": "references/problem-type-routing.md",
+      "bytes": 4991,
+      "sha256": "68132814c91be449919e60691f098dcf5263b788d4912893c65a2840ce513a58"
+    },
+    {
+      "path": "references/project-state-machine.md",
+      "bytes": 4860,
+      "sha256": "5179e6f5215035ec05df0585f7611129b2de9f95aab15eed450fcf86b9553db6"
+    },
+    {
+      "path": "references/quality-gate-plus.md",
+      "bytes": 3173,
+      "sha256": "89dce8109f5ed374b4b33d07668df070bb44f4e719466bad9585aa01aa683700"
+    },
+    {
+      "path": "references/repair-advisor.md",
+      "bytes": 2765,
+      "sha256": "b13bc9e7da507600812930008b24694921d706001a21c18c3bbc4fa1aec31d5b"
+    },
+    {
+      "path": "references/report-consistency-checklist.md",
+      "bytes": 3813,
+      "sha256": "7617df0090f416e4aa63fcc2714d9cc29728920215d9646f3691f2adf0ee043f"
+    },
+    {
+      "path": "references/report-result-audit-design.md",
+      "bytes": 3457,
+      "sha256": "5a9855aede78fb43fe23bf100942867124528b451a14ccb7d75870f99138decb"
+    },
+    {
+      "path": "references/report-result-crosscheck.md",
+      "bytes": 2774,
+      "sha256": "9ff60a62aa053fc330c37ad6008f5eacec021702dea5ef9da6f17a8920488e19"
+    },
+    {
+      "path": "references/report-section-assembler.md",
+      "bytes": 4407,
+      "sha256": "b7246c669e56d5362874ee9e5f55f3c6d2bbedfe40967b53ef085d0066f38e01"
+    },
+    {
+      "path": "references/report-template.md",
+      "bytes": 11943,
+      "sha256": "2a1feda9f21808a750e2989c216f4c0af774c86f692ebc733db67cf6c1d8181f"
+    },
+    {
+      "path": "references/rerun-evaluation-protocol.md",
+      "bytes": 7924,
+      "sha256": "d018bfc8688ad5aa19dc3cca35758d76588641780c7d634ded6776d257a17200"
+    },
+    {
+      "path": "references/result-interpretation-helper.md",
+      "bytes": 3253,
+      "sha256": "b137bad01f80239918498b6b4285b124e80339b5df6db257507cb39d160f6b7d"
+    },
+    {
+      "path": "references/session-competition-agent-generalization-and-checker-templates-20260523.md",
+      "bytes": 4509,
+      "sha256": "0ff73117e948c37b741a849945ae13ff6b22c8aaa4927f2db3fe8039b86cb494"
+    },
+    {
+      "path": "references/session-competition-grade-agent-upgrades-20260523.md",
+      "bytes": 3076,
+      "sha256": "b042497ad1524469c2af3a20f47cbfc2c447445e829588ad0f420c23edae272b"
+    },
+    {
+      "path": "references/session-continuous-optimization-20260522.md",
+      "bytes": 2310,
+      "sha256": "cfa53af90593d68a871faebe1a4cd9f52f08033c3ac1352b9371ee1e6fa09835"
+    },
+    {
+      "path": "references/session-cumcm-2024-c-official-rerun-20260523.md",
+      "bytes": 3649,
+      "sha256": "cfeeddb2a00b8f5bb7486164ad18309610a1443557424e81d0fba2f069e129b7"
+    },
+    {
+      "path": "references/session-generalizing-competition-agent-20260523.md",
+      "bytes": 4130,
+      "sha256": "223170c0a26bb7126b88607d7f5054b152a4529adf8c0110d6d549df0b715c84"
+    },
+    {
+      "path": "references/session-model-skeleton-router-20260523.md",
+      "bytes": 3384,
+      "sha256": "44e5d2fd1f8fd33e6ee0473aae64f69867bf3d41c00107763f1587ed69e8d58d"
+    },
+    {
+      "path": "references/session-problem-coverage-tracker-20260522.md",
+      "bytes": 3728,
+      "sha256": "855dc0152fb872158254be67c11e0e599e0215b6ff5a975c22d633053c744859"
+    },
+    {
+      "path": "references/session-real-rerun-defect-fixes-20260522.md",
+      "bytes": 5028,
+      "sha256": "1091e1c54d1d3a29be0ee7e22ac83a400cb70cb1da0acc429a3ae36119972742"
+    },
+    {
+      "path": "references/session-repair-advisor-20260522.md",
+      "bytes": 3826,
+      "sha256": "a64eb77a804d35a7eecdb20a40fc91417a99681a6269b8f70fb9d9d5b84363c2"
+    },
+    {
+      "path": "references/session-report-section-assembler-20260522.md",
+      "bytes": 3108,
+      "sha256": "9c0640877366cdf1e7a6e942934e6c935b624e2cccfabf19e02aec144958c360"
+    },
+    {
+      "path": "references/session-result-interpretation-helper-20260522.md",
+      "bytes": 3792,
+      "sha256": "e578a6d7932e48844ee773e1a1539483e8c27c77df11282c630f189b2033c1f9"
+    },
+    {
+      "path": "references/state-updater.md",
+      "bytes": 1931,
+      "sha256": "993b7e02a79a586e8b70baea66e4904c7657347bcb7cd743069c23394587179c"
+    },
+    {
+      "path": "references/topic-selection-rubric.md",
+      "bytes": 2960,
+      "sha256": "109221e70055aff15b722b4910bd36731d1690a81c5b744f7e430b1dc483db05"
+    },
+    {
+      "path": "scripts/audit_report_consistency.py",
+      "bytes": 15866,
+      "sha256": "ff3b8b78b26f642d11e8e709d84af2b4c2a944412de7e76fda833459e1fafa3d"
+    },
+    {
+      "path": "scripts/competition_evidence_builder.py",
+      "bytes": 20826,
+      "sha256": "468c24731c6695388dd674ca543559744cfa0549c809e343e067f1881e96ce19"
+    },
+    {
+      "path": "scripts/competition_readiness_gate.py",
+      "bytes": 20552,
+      "sha256": "210e22f0d59fc6efe5b6b06e171f75dec607a6488aa056ce8652b36fe14a5011"
+    },
+    {
+      "path": "scripts/contest_qc_gate.py",
+      "bytes": 26725,
+      "sha256": "533dccde2771a2b319ccd88727cd1c6c596334f6c2b58f3f59f6845869d72efb"
+    },
+    {
+      "path": "scripts/create_modeling_project.py",
+      "bytes": 19914,
+      "sha256": "32970b5255481f93c04947269f28e35e25ce09704c2dbcb5ea28dee93d89308d"
+    },
+    {
+      "path": "scripts/domain_checker_template_builder.py",
+      "bytes": 11450,
+      "sha256": "852a7e97acdbc6c9239745aa80e6697f386cfac85537c3d0bc0615df8616a589"
+    },
+    {
+      "path": "scripts/finalize_modeling_project.py",
+      "bytes": 19379,
+      "sha256": "edbe927c7831eb5929494006499ad84c5ff7807a5a895ccbe2eaec6f1f7b2ff3"
+    },
+    {
+      "path": "scripts/model_skeleton_router.py",
+      "bytes": 14765,
+      "sha256": "d570866de990b663eb999bcec690fb7dccc9ec36cfc436711f0b412c950d3c1c"
+    },
+    {
+      "path": "scripts/modeling_pipeline.py",
+      "bytes": 33601,
+      "sha256": "8ef8ec4dad572df168b01be18230fa30a3b3e7082285b9bba6124f027038d8bd"
+    },
+    {
+      "path": "scripts/problem_coverage_tracker.py",
+      "bytes": 14399,
+      "sha256": "52293be9abe4bbbe9a48c0456379146afbe0ea93ce642e93f50e0d3851967430"
+    },
+    {
+      "path": "scripts/quality_gate_plus.py",
+      "bytes": 14603,
+      "sha256": "b828624471f23db6e1ed95293d2157db080a8ba85f04286aa5d035f0f6c23083"
+    },
+    {
+      "path": "scripts/repair_advisor.py",
+      "bytes": 14454,
+      "sha256": "ff8a6057e36139d508a048c4e9de54aa434bba94c10f79360dcc407718721a35"
+    },
+    {
+      "path": "scripts/report_section_assembler.py",
+      "bytes": 21307,
+      "sha256": "852494981dd98632cd062d4af8642c5ccd157ec64ad7f77bb1690ee6c74ea99e"
+    },
+    {
+      "path": "scripts/result_interpretation_helper.py",
+      "bytes": 20009,
+      "sha256": "71cd2cdc1b417f8523294184e5a122d504d6dd2a1df683c2180c85567d3db5ad"
+    },
+    {
+      "path": "scripts/submission_package_contract.py",
+      "bytes": 7247,
+      "sha256": "6b2fd45798a846536779fb5857564426ba3ebfb5c051688f8531c4d3e41032de"
+    },
+    {
+      "path": "scripts/tests/test_competition_evidence_builder.py",
+      "bytes": 1604,
+      "sha256": "a6418066b4aea4ab81bcbf4b4d66a1690099884f32371b77af5c99f7c76062f8"
+    },
+    {
+      "path": "scripts/tests/test_competition_grade_e2e.py",
+      "bytes": 5974,
+      "sha256": "2c1d5c8cbf721c1ef32c86f9b080989e16ae45d2132c64c2cd1923893800e5db"
+    },
+    {
+      "path": "scripts/tests/test_competition_readiness_truthiness.py",
+      "bytes": 2278,
+      "sha256": "1a72fe5477a662aacd1303a6fac81f4bd6e1cbe11b505f9f0602f8cbca1b6401"
+    },
+    {
+      "path": "scripts/tests/test_contest_qc_gate.py",
+      "bytes": 9158,
+      "sha256": "1b9ab5823b52bf5fb0354a80a1a5f85a58be66f69b0006662bd0b19f1b4ae223"
+    },
+    {
+      "path": "scripts/tests/test_create_modeling_project_portability.py",
+      "bytes": 986,
+      "sha256": "ca1fb3987d0c098e4a0ee090ad52eb6d69b93b83cde7c65b26f4bd095bb88649"
+    },
+    {
+      "path": "scripts/tests/test_finalize_modeling_project.py",
+      "bytes": 3099,
+      "sha256": "fec66674d55516d74fa9bf28c892bbcedbdc8a59458ed8b02cfd95f14237a5f6"
+    },
+    {
+      "path": "scripts/tests/test_modeling_pipeline_order.py",
+      "bytes": 1265,
+      "sha256": "0ad813a00e2509bc07c0cb4bc83c417cea326a2eedce659a3e23acf21bc3bf3c"
+    },
+    {
+      "path": "scripts/tests/test_repair_advisor.py",
+      "bytes": 1045,
+      "sha256": "9ed9b7de1f779dda08ca2d42592c41d2c47ef08a98dd8b5b7bbded968db794e5"
+    },
+    {
+      "path": "scripts/tests/test_report_section_assembler.py",
+      "bytes": 1721,
+      "sha256": "848aa40d5e95bb43665b3683c74c6251a1d5e26fb87d57d8a885391d66100574"
+    },
+    {
+      "path": "scripts/tests/test_submission_package_contract.py",
+      "bytes": 4620,
+      "sha256": "ea7569b51c4979cd664af4b53109e16c68736474ce118d2842e1f3186caece49"
+    },
+    {
+      "path": "scripts/update_project_state.py",
+      "bytes": 7880,
+      "sha256": "45c323189781e2c17609b9e7ed42b76a9d442443fdcefd4c75c5724a267583e7"
+    },
+    {
+      "path": "templates/data-audit-excel.md",
+      "bytes": 4345,
+      "sha256": "7aa2b57037eb7c2caaec3fe37bb97a0f365344e13e0acd816fb3758ec8974c5f"
+    },
+    {
+      "path": "templates/project-README.md",
+      "bytes": 2649,
+      "sha256": "385998d532e3127d201ce8ca6a24222dd40f82e7a88d533a26c3550fbd58413f"
+    }
+  ]
+}
