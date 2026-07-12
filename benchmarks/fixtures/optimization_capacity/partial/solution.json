@@ -1,0 +1,1 @@
+{"case_id":"optimization_capacity","model_name":"feasible-baseline","model_version":"1","random_seed":20260712,"metrics":{"objective":42},"outputs":{"decisions":{"A":4,"B":3}},"checks":{"capacity_feasible":true,"integer_decisions":true,"baseline_compared":true,"sensitivity_checked":false},"evidence":{"results":"artifacts/missing.csv"}}

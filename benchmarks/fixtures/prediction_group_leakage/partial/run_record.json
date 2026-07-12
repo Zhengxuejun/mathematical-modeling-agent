@@ -1,0 +1,1 @@
+{"command":"python predict.py","runtime_seconds":0.02,"exit_code":0,"input_hashes":{"input/data.csv":"366f25e00fb004be1eb96488c108eaf21a427c168a3e70626b89373842fa9828"},"artifacts":{}}

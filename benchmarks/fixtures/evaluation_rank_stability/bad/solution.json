@@ -1,0 +1,1 @@
+{"case_id":"evaluation_rank_stability","model_name":"wrong-direction-ranking","model_version":"1","random_seed":20260712,"metrics":{"stability_rate":1.0},"outputs":{"ranking":["A","B","C"],"top_choice":"A"},"checks":{"directions_correct":false,"weight_sum":1.0,"perturbation_stability":true,"tie_handling":true},"evidence":{"results":"artifacts/results.csv"}}

@@ -1,0 +1,1 @@
+{"case_id":"prediction_group_leakage","model_name":"group-holdout-baseline","model_version":"1","random_seed":20260712,"metrics":{"rmse":0.35},"outputs":{"prediction_signature":"baseline-v1","split_method":"group"},"checks":{"predictions_complete":true,"no_target_leakage":true,"fold_variability_reported":false},"evidence":{"results":"artifacts/missing.csv"}}
