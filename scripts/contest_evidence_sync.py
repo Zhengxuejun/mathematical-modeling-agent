@@ -40,6 +40,11 @@ IDENTITY_FIELDS = {
     "result_registry.csv": "source_table",
     "figure_evidence.csv": "figure_path",
 }
+AUTHORITATIVE_LINK_FIELDS = {
+    "deliverable_matrix.csv": (),
+    "result_registry.csv": ("source_script", "run_id"),
+    "figure_evidence.csv": ("run_id",),
+}
 TRANSACTION_NAME = ".evidence_sync.transaction.json"
 LOCK_NAME = ".evidence_sync.lock"
 
@@ -265,7 +270,19 @@ def merge_registry(
         row = rows[by_identity[identity]]
         changed = False
         for field_name in REGISTRY_HEADERS[name]:
-            if not (row.get(field_name) or "").strip() and (candidate.get(field_name) or "").strip():
+            existing_value = (row.get(field_name) or "").strip()
+            candidate_value = (candidate.get(field_name) or "").strip()
+            if (
+                field_name in AUTHORITATIVE_LINK_FIELDS[name]
+                and existing_value
+                and candidate_value
+                and existing_value != candidate_value
+            ):
+                conflicts.append(
+                    f"Conflicting {field_name} for {name} identity {identity}: "
+                    f"existing={existing_value!r}, discovered={candidate_value!r}"
+                )
+            elif not existing_value and candidate_value:
                 row[field_name] = candidate[field_name]
                 changed = True
         if changed:
@@ -312,14 +329,19 @@ def recover_transaction(qc_dir: Path) -> None:
     journal = qc_dir / TRANSACTION_NAME
     if not journal.exists():
         return
-    try:
-        payload = json.loads(journal.read_text(encoding="utf-8"))
-        entries = payload.get("entries", [])
-        if not isinstance(entries, list):
-            raise ValueError("transaction entries must be a list")
-        rollback_entries(qc_dir, entries)
-    finally:
-        journal.unlink(missing_ok=True)
+    payload = json.loads(journal.read_text(encoding="utf-8"))
+    entries = payload.get("entries", [])
+    if not isinstance(entries, list):
+        raise ValueError("transaction entries must be a list")
+    rollback_entries(qc_dir, entries)
+    journal.unlink(missing_ok=True)
+
+
+def write_journal(qc_dir: Path, payload: dict[str, object], token: str) -> None:
+    journal = qc_dir / TRANSACTION_NAME
+    temporary = qc_dir / f".{TRANSACTION_NAME}.{token}.temporary"
+    write_fsynced(temporary, json.dumps(payload).encode("utf-8"))
+    os.replace(temporary, journal)
 
 
 def write_transaction(
@@ -349,13 +371,15 @@ def write_transaction(
             had_original = target.exists()
             if had_original:
                 shutil.copy2(target, backup)
+                with backup.open("rb") as handle:
+                    os.fsync(handle.fileno())
             entries.append({
                 "target": target.name,
                 "temporary": temporary.name,
                 "backup": backup.name,
                 "had_original": had_original,
             })
-        write_fsynced(journal, json.dumps({"phase": "applying", "entries": entries}).encode("utf-8"))
+        write_journal(qc_dir, {"phase": "applying", "entries": entries}, token)
         for entry in entries:
             replace(qc_dir / str(entry["temporary"]), qc_dir / str(entry["target"]))
     except Exception:
@@ -422,8 +446,7 @@ def synchronize(project: Path, dry_run: bool = False) -> SyncSummary:
         with lock_path.open("a+") as lock:
             fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
             recover_transaction(qc_dir)
-            for name in TARGET_REGISTRIES:
-                validate_header(qc_dir / name, REGISTRY_HEADERS[name])
+            validate_target_headers(qc_dir)
             init_project(project)
             summary = build_sync(project)
             summary.registries = {
@@ -438,6 +461,7 @@ def synchronize(project: Path, dry_run: bool = False) -> SyncSummary:
             }
             write_transaction(project, changed, render_reports(summary))
             return summary
+    validate_target_headers(qc_dir)
     summary = build_sync(project)
     summary.registries = {
         name: merge_registry(name, registry.merged_rows, registry.candidates)
@@ -445,6 +469,11 @@ def synchronize(project: Path, dry_run: bool = False) -> SyncSummary:
     }
     _refresh_counts(summary)
     return summary
+
+
+def validate_target_headers(qc_dir: Path) -> None:
+    for name in TARGET_REGISTRIES:
+        validate_header(qc_dir / name, REGISTRY_HEADERS[name])
 
 
 def _refresh_counts(summary: SyncSummary) -> None:

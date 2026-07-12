@@ -190,6 +190,20 @@ def test_malformed_registry_header_blocks_all_changes(tmp_path: Path) -> None:
     assert not (qc / "evidence_sync.json").exists()
 
 
+def test_dry_run_validates_existing_registry_headers_without_mutation(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    make_discovery_project(project, tmp_path / "outside.csv")
+    malformed = project / QC_REL / "figure_evidence.csv"
+    malformed.write_text("wrong,header\na,b\n", encoding="utf-8")
+    before = malformed.read_bytes()
+
+    with pytest.raises(RegistrySchemaError):
+        synchronize(project, dry_run=True)
+
+    assert malformed.read_bytes() == before
+
+
 def test_interrupted_transaction_is_recovered_from_journal(tmp_path: Path) -> None:
     qc = tmp_path / QC_REL
     qc.mkdir(parents=True)
@@ -218,6 +232,19 @@ def test_interrupted_transaction_is_recovered_from_journal(tmp_path: Path) -> No
     assert not journal.exists()
 
 
+def test_corrupt_transaction_journal_is_preserved_for_manual_recovery(tmp_path: Path) -> None:
+    qc = tmp_path / QC_REL
+    qc.mkdir(parents=True)
+    journal = qc / ".evidence_sync.transaction.json"
+    journal.write_text("{truncated", encoding="utf-8")
+
+    with pytest.raises(json.JSONDecodeError):
+        recover_transaction(qc)
+
+    assert journal.exists()
+    assert journal.read_text(encoding="utf-8") == "{truncated"
+
+
 def test_replacement_failure_rolls_back_every_target(tmp_path: Path) -> None:
     project = tmp_path / "project"
     project.mkdir()
@@ -239,6 +266,27 @@ def test_replacement_failure_rolls_back_every_target(tmp_path: Path) -> None:
 
     assert {name: (qc / name).read_bytes() for name in before} == before
     assert not (qc / ".evidence_sync.transaction.json").exists()
+
+
+def test_exact_run_linkage_conflict_is_reported_without_overwriting_manual_value(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    make_discovery_project(project, tmp_path / "outside.csv")
+    qc = project / QC_REL
+    write_rows(qc / "result_registry.csv", [{
+        "result_id": "R-HUMAN",
+        "source_table": "03_结果表格/model_results.csv",
+        "source_script": "02_代码/other.py",
+        "run_id": "R-OLD",
+        "validation_status": "checked",
+    }])
+
+    summary = synchronize(project)
+
+    assert summary.counts["conflicts"] == 2
+    row = read_rows(qc / "result_registry.csv")[0]
+    assert row["source_script"] == "02_代码/other.py"
+    assert row["run_id"] == "R-OLD"
 
 
 def test_cli_writes_review_only_reports_and_returns_zero(tmp_path: Path) -> None:
