@@ -31,11 +31,15 @@ def render_tree(tree: dict[str, Any]) -> str:
                 benchmark=_format_number(benchmark.get("total_score")),
             )
         )
-        if node.get("hypothesis"):
-            lines.append(f"<!-- {node['candidate_id']} hypothesis: {node['hypothesis']} -->")
-        reasons = evaluation.get("blocking_reasons") or []
-        if reasons:
-            lines.append(f"<!-- {node['candidate_id']} blocked: {'; '.join(reasons)} -->")
+    if tree["nodes"]:
+        lines.extend(["", "## Branch Evidence", ""])
+        for node in tree["nodes"]:
+            lines.append(f"### {node['candidate_id']} {node['label']}")
+            lines.extend(["", f"Hypothesis: {node['hypothesis']}", ""])
+            reasons = (node.get("evaluation") or {}).get("blocking_reasons") or []
+            if reasons:
+                lines.append("Blocking reasons: " + "; ".join(reasons))
+                lines.append("")
     if tree.get("selection_ranking"):
         lines.extend(["", "## Selection Ranking", ""])
         for index, item in enumerate(tree["selection_ranking"], 1):

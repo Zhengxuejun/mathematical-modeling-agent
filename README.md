@@ -11,6 +11,7 @@
 - 报告与结果表、图表、数值和单位一致性审计。
 - Contest QC 与 competition readiness 分层门禁。
 - 离线确定性 Benchmark Harness，覆盖优化可行性、分组预测泄漏和评价排序稳定性。
+- 有限深度 AIDE 式候选方案树，记录模型谱系、真实运行证据并确定性选优。
 - manifest v2.0、SHA256 校验和原子化最终打包。
 
 ## 快速开始
@@ -52,6 +53,22 @@ python3 scripts/modeling_benchmark.py run \
 ```
 
 评分覆盖正确性、可行性、统计有效性、可复现性、证据一致性和效率。非零运行、输入哈希不符和不可信契约会判为 `invalid`；不可行解或明确数据泄漏会判为 `blocked`。Benchmark 分数不会写入或提升项目的 `competition_ready`，`strong` 也不代表能够获奖。
+
+## 候选方案树
+
+在正式题中保留 baseline 和改进分支，并从已经运行产生的项目内 submission 评估候选：
+
+```bash
+python 02_代码/19_candidate_solution_tree.py init \
+  --objective-metric objective --direction maximize
+python 02_代码/19_candidate_solution_tree.py add \
+  --submission 08_候选方案/baseline \
+  --label baseline --hypothesis "建立可复现基线"
+python 02_代码/19_candidate_solution_tree.py evaluate --candidate C001
+python 02_代码/19_candidate_solution_tree.py select
+```
+
+工具不会执行候选命令。只有退出成功、输入哈希一致、可行性与验证通过、证据哈希有效的节点才能参与选优；不同输入快照或不同 Benchmark case 的节点拒绝比较。`selected` 不会自动提升 Contest QC 或 `competition_ready`。详细契约见 [references/candidate-solution-tree.md](references/candidate-solution-tree.md)。
 
 完整流程只有在 `final_ready` 和 `competition_ready` 均通过后才发布 `07_提交包` 并推进到有效 S8。开放 P0/P1、模板内容、项目外证据、失败 manifest、文件缺失或 SHA256 不一致都会阻断交付。
 

@@ -184,7 +184,7 @@ SCRIPT_TEMPLATES = {
     "16_domain_checker_templates.py": """from pathlib import Path\nimport subprocess\nimport sys\n\nBASE = Path(__file__).resolve().parents[1]\nSCRIPT = Path('__SKILL_SCRIPT_DIR__/domain_checker_template_builder.py')\nraise SystemExit(subprocess.call([sys.executable, str(SCRIPT), str(BASE)] + sys.argv[1:]))\n""",
     "17_contest_qc.py": """from pathlib import Path\nimport subprocess\nimport sys\n\nBASE = Path(__file__).resolve().parents[1]\nSCRIPT = Path('__SKILL_SCRIPT_DIR__/contest_qc_gate.py')\nraise SystemExit(subprocess.call([sys.executable, str(SCRIPT), str(BASE)] + sys.argv[1:]))\n""",
     "18_contest_evidence_sync.py": """from pathlib import Path\nimport subprocess\nimport sys\n\nBASE = Path(__file__).resolve().parents[1]\nSCRIPT = Path('__SKILL_SCRIPT_DIR__/contest_evidence_sync.py')\nraise SystemExit(subprocess.call([sys.executable, str(SCRIPT), str(BASE)] + sys.argv[1:]))\n""",
-    "19_candidate_solution_tree.py": """from pathlib import Path\nimport subprocess\nimport sys\n\nBASE = Path(__file__).resolve().parents[1]\nSCRIPT = Path('__SKILL_SCRIPT_DIR__/candidate_solution_tree.py')\nraise SystemExit(subprocess.call([sys.executable, str(SCRIPT), sys.argv[1], str(BASE)] + sys.argv[2:])) if len(sys.argv) > 1 else 2\n""",
+    "19_candidate_solution_tree.py": """from pathlib import Path\nimport subprocess\nimport sys\n\nBASE = Path(__file__).resolve().parents[1]\nSCRIPT = Path('__SKILL_SCRIPT_DIR__/candidate_solution_tree.py')\nargs = sys.argv[1:]\nif args:\n    args = [args[0], str(BASE)] + args[1:]\nraise SystemExit(subprocess.call([sys.executable, str(SCRIPT)] + args))\n""",
 }
 
 REQ = """# Core scaffold uses only Python stdlib for data_audit/baseline/model_main/sensitivity.

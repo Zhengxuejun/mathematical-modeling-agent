@@ -47,4 +47,3 @@
 - [ ] Push `codex/candidate-solution-tree` and open a focused pull request.
 - [ ] Confirm Python 3.11 and Python 3.13 GitHub checks pass.
 - [ ] Squash-merge, synchronize local main, remove the temporary worktree and branch, and verify local/remote parity.
-

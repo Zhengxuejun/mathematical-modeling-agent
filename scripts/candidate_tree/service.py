@@ -70,7 +70,7 @@ def evaluate_candidate(project: Path, candidate_id: str, benchmark_case: Path | 
     def evaluate(tree: dict[str, Any]) -> dict[str, Any]:
         node = _find_node(tree, candidate_id)
         submission = resolve_project_path(project, node["submission_path"], directory=True)
-        evaluation = _evaluate_submission(tree, submission, benchmark_case)
+        evaluation = _evaluate_submission(project, tree, submission, benchmark_case)
         node["evaluation"] = evaluation
         node["status"] = "evaluated" if evaluation["eligible"] else "blocked"
         if tree.get("selected_candidate_id") == candidate_id and not evaluation["eligible"]:
@@ -86,13 +86,25 @@ def evaluate_candidate(project: Path, candidate_id: str, benchmark_case: Path | 
 
 def select_candidate(project: Path) -> dict[str, Any]:
     def select(tree: dict[str, Any]) -> dict[str, Any]:
+        for node in tree["nodes"]:
+            if (node.get("evaluation") or {}).get("eligible") is True:
+                _refresh_snapshot_gate(project, node)
+        selected_id = tree.get("selected_candidate_id")
+        if selected_id is not None and not _find_node(tree, selected_id)["evaluation"]["eligible"]:
+            tree["selected_candidate_id"] = None
         eligible = [node for node in tree["nodes"] if (node.get("evaluation") or {}).get("eligible") is True]
         if not eligible:
-            raise TreeError("no eligible evaluated candidates")
+            return {"error": "no eligible evaluated candidates"}
+        input_signatures = {
+            tuple(sorted(node["evaluation"]["verified_inputs"].items()))
+            for node in eligible
+        }
+        if len(input_signatures) != 1:
+            return {"error": "eligible candidates have incomparable input provenance"}
         benchmark_values = [(node["evaluation"].get("benchmark") or {}).get("case_hash") for node in eligible]
         if any(benchmark_values):
             if not all(benchmark_values) or len(set(benchmark_values)) != 1:
-                raise TreeError("eligible candidates have mixed or incomparable Benchmark coverage")
+                return {"error": "eligible candidates have mixed or incomparable Benchmark coverage"}
             use_benchmark = True
         else:
             use_benchmark = False
@@ -110,29 +122,35 @@ def select_candidate(project: Path) -> dict[str, Any]:
             }
             for node in ranked
         ]
-        return winner
+        return {"winner": winner}
 
-    _, winner = mutate(project, select)
-    return winner
+    _, outcome = mutate(project, select)
+    if "error" in outcome:
+        raise TreeError(outcome["error"])
+    return outcome["winner"]
 
 
 def get_tree(project: Path) -> dict[str, Any]:
     return load_tree(project)
 
 
-def _evaluate_submission(tree: dict[str, Any], submission: Path, benchmark_case: Path | None) -> dict[str, Any]:
+def _evaluate_submission(project: Path, tree: dict[str, Any], submission: Path, benchmark_case: Path | None) -> dict[str, Any]:
     gates = {
         "contract_valid": False,
         "run_succeeded": False,
+        "inputs_verified": False,
         "feasible": False,
         "validation_passed": False,
         "evidence_verified": False,
+        "snapshot_current": False,
     }
     reasons: list[str] = []
     objective: float | None = None
     validation_score: float | None = None
     runtime: float | None = None
     evidence_hashes: dict[str, str] = {}
+    input_hashes: dict[str, str] = {}
+    submission_hashes: dict[str, str] = {}
     benchmark: dict[str, Any] | None = None
     try:
         solution = load_json_object(submission / "solution.json")
@@ -155,10 +173,17 @@ def _evaluate_submission(tree: dict[str, Any], submission: Path, benchmark_case:
             raise TreeError("exit_code must be an integer")
         gates["contract_valid"] = True
         gates["run_succeeded"] = run_record["exit_code"] == 0
+        input_hashes = _verify_inputs(project, run_record)
+        gates["inputs_verified"] = bool(input_hashes)
         gates["feasible"] = solution["checks"].get("feasible") is True
         gates["validation_passed"] = solution["checks"].get("validation_passed") is True
         evidence_hashes = _verify_evidence(submission, solution, run_record)
         gates["evidence_verified"] = bool(evidence_hashes)
+        submission_hashes = {
+            relative: sha256_file(submission / relative)
+            for relative in ("solution.json", "run_record.json", "report.md")
+        }
+        gates["snapshot_current"] = True
     except TreeError as exc:
         reasons.append(str(exc))
     for gate, passed in gates.items():
@@ -189,8 +214,37 @@ def _evaluate_submission(tree: dict[str, Any], submission: Path, benchmark_case:
         "validation_score": validation_score,
         "runtime_seconds": runtime,
         "verified_evidence": evidence_hashes,
+        "verified_inputs": input_hashes,
+        "submission_hashes": submission_hashes,
         "benchmark": benchmark,
     }
+
+
+def _refresh_snapshot_gate(project: Path, node: dict[str, Any]) -> None:
+    evaluation = node["evaluation"]
+    submission = resolve_project_path(project, node["submission_path"], directory=True)
+    roots_and_hashes = (
+        (project.resolve(strict=True), evaluation["verified_inputs"]),
+        (submission, evaluation["verified_evidence"]),
+        (submission, evaluation["submission_hashes"]),
+    )
+    current = True
+    for root, mapping in roots_and_hashes:
+        for relative, expected_hash in mapping.items():
+            try:
+                path = root.joinpath(*safe_relative_path(relative).parts).resolve(strict=True)
+                path.relative_to(root)
+                if not path.is_file() or sha256_file(path) != expected_hash:
+                    current = False
+            except (FileNotFoundError, ValueError, TreeError):
+                current = False
+    evaluation["gates"]["snapshot_current"] = current
+    evaluation["eligible"] = all(evaluation["gates"].values())
+    if not current:
+        reason = "candidate artifacts changed after evaluation"
+        if reason not in evaluation["blocking_reasons"]:
+            evaluation["blocking_reasons"].append(reason)
+        node["status"] = "blocked"
 
 
 def _validate_identity(solution: dict[str, Any]) -> None:
@@ -232,6 +286,21 @@ def _verify_evidence(submission: Path, solution: dict[str, Any], run_record: dic
         if artifacts.get(relative) != actual_hash:
             raise TreeError(f"evidence hash mismatch: {relative}")
         verified[relative] = actual_hash
+    return verified
+
+
+def _verify_inputs(project: Path, run_record: dict[str, Any]) -> dict[str, str]:
+    inputs = run_record.get("input_hashes")
+    if not isinstance(inputs, dict) or not inputs:
+        raise TreeError("run_record must declare at least one input hash")
+    verified: dict[str, str] = {}
+    for relative, declared_hash in sorted(inputs.items()):
+        if not isinstance(relative, str) or not isinstance(declared_hash, str):
+            raise TreeError("input paths and hashes must be strings")
+        path = resolve_project_path(project, relative, directory=False)
+        if sha256_file(path) != declared_hash:
+            raise TreeError(f"input hash mismatch: {relative}")
+        verified[relative] = declared_hash
     return verified
 
 
@@ -289,4 +358,4 @@ def _find_node(tree: dict[str, Any], candidate_id: str | None) -> dict[str, Any]
 def _required_text(value: str, field: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise TreeError(f"{field} must be a non-empty string")
-    return value.strip()
+    return " ".join(value.split())

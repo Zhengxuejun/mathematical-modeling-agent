@@ -68,8 +68,8 @@ def new_tree(
 def validate_tree(tree: dict[str, Any]) -> None:
     if tree.get("schema_version") != TREE_SCHEMA_VERSION:
         raise TreeError("candidate tree schema_version must be 1")
-    if tree.get("tool_version") != TREE_VERSION:
-        raise TreeError(f"candidate tree tool_version must be {TREE_VERSION}")
+    if not isinstance(tree.get("tool_version"), str) or not tree["tool_version"]:
+        raise TreeError("candidate tree tool_version must be a non-empty string")
     for field in ("objective_metric", "validation_metric"):
         if not isinstance(tree.get(field), str) or not tree[field].strip():
             raise TreeError(f"{field} must be a non-empty string")
@@ -106,6 +106,14 @@ def validate_tree(tree: dict[str, Any]) -> None:
         evaluation = node.get("evaluation")
         if evaluation is not None and not isinstance(evaluation, dict):
             raise TreeError(f"candidate {candidate_id} has invalid evaluation")
+        if evaluation is not None:
+            _validate_evaluation(candidate_id, evaluation)
+        if node["status"] == "registered" and evaluation is not None:
+            raise TreeError(f"registered candidate {candidate_id} cannot have evaluation")
+        if node["status"] in {"evaluated", "selected"} and (evaluation is None or evaluation.get("eligible") is not True):
+            raise TreeError(f"eligible status is inconsistent for candidate {candidate_id}")
+        if node["status"] == "blocked" and (evaluation is None or evaluation.get("eligible") is not False):
+            raise TreeError(f"blocked status is inconsistent for candidate {candidate_id}")
         by_id[candidate_id] = node
     selected = tree.get("selected_candidate_id")
     selected_nodes = [node for node in nodes if node["status"] == "selected"]
@@ -116,4 +124,57 @@ def validate_tree(tree: dict[str, Any]) -> None:
             raise TreeError("selected_candidate_id is inconsistent with node status")
     if not isinstance(tree.get("selection_ranking"), list):
         raise TreeError("selection_ranking must be a list")
+    ranking_ids: set[str] = set()
+    for item in tree["selection_ranking"]:
+        if not isinstance(item, dict) or set(item) != {"candidate_id", "comparison"}:
+            raise TreeError("selection ranking entries need candidate_id and comparison")
+        if item["candidate_id"] not in by_id or item["candidate_id"] in ranking_ids:
+            raise TreeError("selection ranking contains unknown or duplicate candidate")
+        if not isinstance(item["comparison"], str) or not item["comparison"]:
+            raise TreeError("selection comparison must be a non-empty string")
+        ranking_ids.add(item["candidate_id"])
     reject_non_finite(tree)
+
+
+def _validate_evaluation(candidate_id: str, evaluation: dict[str, Any]) -> None:
+    if not isinstance(evaluation.get("eligible"), bool):
+        raise TreeError(f"candidate {candidate_id} evaluation needs eligible boolean")
+    gates = evaluation.get("gates")
+    if not isinstance(gates, dict) or not gates or any(not isinstance(key, str) or not isinstance(value, bool) for key, value in gates.items()):
+        raise TreeError(f"candidate {candidate_id} has invalid gates")
+    if evaluation["eligible"] != all(gates.values()):
+        raise TreeError(f"candidate {candidate_id} eligibility disagrees with gates")
+    reasons = evaluation.get("blocking_reasons")
+    if not isinstance(reasons, list) or any(not isinstance(item, str) or not item for item in reasons):
+        raise TreeError(f"candidate {candidate_id} has invalid blocking reasons")
+    if evaluation["eligible"] and reasons:
+        raise TreeError(f"eligible candidate {candidate_id} cannot have blocking reasons")
+    if not evaluation["eligible"] and not reasons:
+        raise TreeError(f"blocked candidate {candidate_id} needs a blocking reason")
+    for field in ("objective", "validation_score", "runtime_seconds"):
+        value = evaluation.get(field)
+        if value is not None and (not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(value)):
+            raise TreeError(f"candidate {candidate_id} has invalid {field}")
+    validation = evaluation.get("validation_score")
+    if validation is not None and not 0 <= validation <= 1:
+        raise TreeError(f"candidate {candidate_id} validation_score is outside [0, 1]")
+    runtime = evaluation.get("runtime_seconds")
+    if runtime is not None and runtime < 0:
+        raise TreeError(f"candidate {candidate_id} runtime_seconds is negative")
+    for field in ("verified_evidence", "verified_inputs", "submission_hashes"):
+        mapping = evaluation.get(field)
+        if not isinstance(mapping, dict) or any(not isinstance(key, str) or not isinstance(value, str) for key, value in mapping.items()):
+            raise TreeError(f"candidate {candidate_id} has invalid {field}")
+    benchmark = evaluation.get("benchmark")
+    if benchmark is not None:
+        if not isinstance(benchmark, dict):
+            raise TreeError(f"candidate {candidate_id} has invalid benchmark")
+        for field in ("case_id", "case_hash", "verdict"):
+            if not isinstance(benchmark.get(field), str):
+                raise TreeError(f"candidate {candidate_id} benchmark lacks {field}")
+        score = benchmark.get("total_score")
+        if not isinstance(score, (int, float)) or isinstance(score, bool) or not math.isfinite(score) or not 0 <= score <= 100:
+            raise TreeError(f"candidate {candidate_id} has invalid benchmark score")
+        blocks = benchmark.get("hard_blocks")
+        if not isinstance(blocks, list) or any(not isinstance(item, str) for item in blocks):
+            raise TreeError(f"candidate {candidate_id} has invalid benchmark hard blocks")

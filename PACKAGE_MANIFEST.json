@@ -1,9 +1,9 @@
 {
   "name": "mathematical-modeling-agent",
   "version": "1.2.0",
-  "created_at": "2026-07-12T22:01:43",
+  "created_at": "2026-07-12T22:40:50",
   "distribution": "portable Hermes skill package",
-  "file_count": 146,
+  "file_count": 157,
   "excluded": [
     ".git",
     ".pytest_cache",
@@ -39,18 +39,18 @@
     },
     {
       "path": "NOTICE",
-      "bytes": 720,
-      "sha256": "07dabe5e88dea704dadf0b092b96e49b04072d400405416d0e99ce2d2e9229be"
+      "bytes": 1031,
+      "sha256": "b026281aafa419612f08c258252731a7c221c10864c8f8c5a5551bc4ae1ab1bd"
     },
     {
       "path": "README.md",
-      "bytes": 4295,
-      "sha256": "39d0390eb990e003f59efbf16f4d49d2b30b6b13f7e3f13ec4db3e5e408b8e68"
+      "bytes": 5311,
+      "sha256": "c79dd18dc59f167a573e3f10bec4ee3d0ca5f02eef3f39937c727b285fc8fa19"
     },
     {
       "path": "RELEASE_NOTES.md",
-      "bytes": 1906,
-      "sha256": "e8c44646ff6019e75118f33f43c1547314f4df9298b75ca764c4279566f47157"
+      "bytes": 2301,
+      "sha256": "009ba86d6432323ca2e966986535e905fb7c28070cbabe6057fad86dad376172"
     },
     {
       "path": "SECURITY.md",
@@ -59,8 +59,8 @@
     },
     {
       "path": "SKILL.md",
-      "bytes": 30907,
-      "sha256": "87a11ee13f5595fe36a299f13a1b716bfb9058472e8bfdcb200612402d272529"
+      "bytes": 31586,
+      "sha256": "1b69fa1554754cd52411f6397577793b87c6003c4de40bec105d5e8d4f279d3e"
     },
     {
       "path": "benchmarks/cases/evaluation_rank_stability/case.json",
@@ -283,6 +283,11 @@
       "sha256": "b5f2fd564ca2cdbf681ab47889ec874f96e7441eeee01dbf28bdea2dedcf324c"
     },
     {
+      "path": "docs/superpowers/plans/2026-07-12-candidate-solution-tree.md",
+      "bytes": 3005,
+      "sha256": "b549ffd5ba2dd868772c03acdd2fd99f4e544c51c6c3d517f0ee306e7b81c784"
+    },
+    {
       "path": "docs/superpowers/plans/2026-07-12-contest-evidence-sync.md",
       "bytes": 13577,
       "sha256": "a595b823f370a2416a0d2067ce7508236234bfe4f11402cad49adeb27cd078e8"
@@ -291,6 +296,11 @@
       "path": "docs/superpowers/plans/2026-07-12-modeling-benchmark-harness.md",
       "bytes": 6172,
       "sha256": "ce42aefecd8fd9c43c901ff504523d483de51fa0c7606d994ee30c8fd87dca99"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-07-12-candidate-solution-tree-design.md",
+      "bytes": 6910,
+      "sha256": "19bd7d033bb40fc9b5114685510b3883fd0d94ff1b16daec69dc7dd1ba0e82bc"
     },
     {
       "path": "docs/superpowers/specs/2026-07-12-contest-evidence-sync-design.md",
@@ -311,6 +321,11 @@
       "path": "references/biostatistics-and-screening.md",
       "bytes": 5151,
       "sha256": "a94c7e6d89c349f87ea9af91e87305d110381d262757e381b825061663f28576"
+    },
+    {
+      "path": "references/candidate-solution-tree.md",
+      "bytes": 3210,
+      "sha256": "5ab2d1e42d7748d1841a8150616a89c8067f6292e09bda847e6bc0331113816b"
     },
     {
       "path": "references/case-study-cumcm-2024-c-crop-strategy-20260523.md",
@@ -369,8 +384,8 @@
     },
     {
       "path": "references/continuous-optimization-notes.md",
-      "bytes": 19277,
-      "sha256": "751d1da0d4e408fff5aee63aa83ff559197492a3fcd4762fb281d8d913fbfd30"
+      "bytes": 20565,
+      "sha256": "cc4a17ad670419b0276e7a4349c38848a6674b6bab2d2ae7d613baf08b1ca640"
     },
     {
       "path": "references/domain-checker-template-builder.md",
@@ -568,6 +583,41 @@
       "sha256": "2d003278b5d31a37d1ff4ba51f441b60e7e79816150a353de1e1271b047419a7"
     },
     {
+      "path": "scripts/candidate_solution_tree.py",
+      "bytes": 3516,
+      "sha256": "b937eb92af324c228eb6f24de27e9e02b1ccbf1efd8bbafcc6fc6ce6fa6871f7"
+    },
+    {
+      "path": "scripts/candidate_tree/__init__.py",
+      "bytes": 88,
+      "sha256": "3c596f09d280557b6a277175a9f83a620e2b5dc1e08d7cfab69ad12ad5ea6075"
+    },
+    {
+      "path": "scripts/candidate_tree/contracts.py",
+      "bytes": 9573,
+      "sha256": "4429d3b0476d96fa6decf2726580fbf0d45be254987567d9b61e870f659c7172"
+    },
+    {
+      "path": "scripts/candidate_tree/paths.py",
+      "bytes": 1634,
+      "sha256": "567d9749733c7da134dd92847b1a76537a81e3d687aec3355abf821b56ffb5ef"
+    },
+    {
+      "path": "scripts/candidate_tree/reporting.py",
+      "bytes": 2492,
+      "sha256": "573f127536374b26cbc412a171e3149ff902c8f339e9d10f951710700f1d7680"
+    },
+    {
+      "path": "scripts/candidate_tree/service.py",
+      "bytes": 15438,
+      "sha256": "92975393974a6d3f2aebb678ae0fc055f4576724615eb8be2520ac573b491f00"
+    },
+    {
+      "path": "scripts/candidate_tree/store.py",
+      "bytes": 2643,
+      "sha256": "f43d02aee7e7c0ea08a64d6d6e13fbcd6de3ef90aa93ef0e40ba812b411edafb"
+    },
+    {
       "path": "scripts/competition_evidence_builder.py",
       "bytes": 20826,
       "sha256": "468c24731c6695388dd674ca543559744cfa0549c809e343e067f1881e96ce19"
@@ -589,8 +639,8 @@
     },
     {
       "path": "scripts/create_modeling_project.py",
-      "bytes": 20390,
-      "sha256": "0476c42bafbb660441ca594b90b60bf588d6df7998c79cd7c36b1139a526c759"
+      "bytes": 21617,
+      "sha256": "5bc02f8dd81b2b8d9ebfb6b4a61be6c9c67c385ec2efbb9890b9bbf400b2572c"
     },
     {
       "path": "scripts/domain_checker_template_builder.py",
@@ -648,6 +698,11 @@
       "sha256": "6b2fd45798a846536779fb5857564426ba3ebfb5c051688f8531c4d3e41032de"
     },
     {
+      "path": "scripts/tests/test_candidate_solution_tree.py",
+      "bytes": 15005,
+      "sha256": "5b9671b49268014d6f4291ced6ed0e48c3a9cb6bd27a599c9bd2a07521abb00a"
+    },
+    {
       "path": "scripts/tests/test_competition_evidence_builder.py",
       "bytes": 1604,
       "sha256": "a6418066b4aea4ab81bcbf4b4d66a1690099884f32371b77af5c99f7c76062f8"
@@ -674,8 +729,8 @@
     },
     {
       "path": "scripts/tests/test_create_modeling_project_portability.py",
-      "bytes": 1487,
-      "sha256": "ebec47c2ab6ffb102dae806c4ae3ef37406bbca4303b0a7d0802b99841778c25"
+      "bytes": 2358,
+      "sha256": "b637e96b8700f4abfea1766fa67a327e907f9d31de8a63649f55b24729f0ae68"
     },
     {
       "path": "scripts/tests/test_finalize_modeling_project.py",
@@ -739,8 +794,8 @@
     },
     {
       "path": "templates/project-README.md",
-      "bytes": 2649,
-      "sha256": "385998d532e3127d201ce8ca6a24222dd40f82e7a88d533a26c3550fbd58413f"
+      "bytes": 2821,
+      "sha256": "e69f12175fa948a51a4a951788e0cbef8847b2c9fa842d3add1c894985c329d7"
     }
   ]
 }

@@ -123,9 +123,12 @@ artifacts/
 - finite non-negative runtime;
 - `exit_code=0`;
 - artifact paths mapped to SHA-256 values.
+- project-local input paths mapped to SHA-256 values.
 
 Every evidence path must resolve inside the candidate directory, exist, and
 match the run record hash. Missing or mismatched evidence blocks the node.
+Every input path must resolve inside the modeling project, exist, and match its
+recorded hash so candidates cannot be compared across silent data snapshots.
 
 ## Evaluation And Selection
 
@@ -134,6 +137,7 @@ Evaluation produces explicit gates:
 ```text
 contract_valid
 run_succeeded
+inputs_verified
 feasible
 validation_passed
 evidence_verified
@@ -143,6 +147,10 @@ benchmark_eligible (when a benchmark case is supplied)
 A node is eligible only when every applicable gate passes. Failed nodes remain
 in the tree as `blocked`; they are evidence about unsuccessful branches, not
 deleted attempts.
+
+Evaluation snapshots hashes for `solution.json`, `run_record.json`, `report.md`,
+inputs, and evidence. Selection re-verifies those hashes and blocks a stale node
+when any artifact changed after evaluation.
 
 Selection is deterministic and lexicographic:
 
@@ -157,6 +165,9 @@ Selection is deterministic and lexicographic:
 If any eligible node has Benchmark evidence, every eligible node must have the
 same Benchmark case hash. Mixed or incomparable Benchmark coverage blocks
 selection instead of silently favoring a measured candidate.
+
+Every eligible node must also have an identical verified input path/hash map.
+Selection fails when candidates used different data files or snapshots.
 
 Selecting a new node returns the previous selection to `evaluated`. The report
 states the ordered comparison values and why blocked nodes were excluded.
@@ -197,4 +208,3 @@ isolation.
 
 Acceptance requires compileall, the complete pytest suite, manifest verification,
 and real GitHub checks on Python 3.11 and Python 3.13.
-

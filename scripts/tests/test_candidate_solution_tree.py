@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from scripts.candidate_tree.contracts import TreeError
+from scripts.candidate_tree.contracts import TreeError, validate_tree
 from scripts.candidate_tree.service import add_candidate, evaluate_candidate, get_tree, initialize_tree, select_candidate
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -32,6 +32,12 @@ def make_candidate(
     result = b"result\nverified\n"
     digest = hashlib.sha256(result).hexdigest()
     (artifacts / "results.csv").write_bytes(result)
+    inputs = project / "01_inputs"
+    inputs.mkdir(exist_ok=True)
+    input_path = inputs / "data.csv"
+    if not input_path.exists():
+        input_path.write_bytes(b"x,y\n1,2\n")
+    input_digest = hashlib.sha256(input_path.read_bytes()).hexdigest()
     solution = {
         "model_name": name,
         "model_version": "1",
@@ -44,6 +50,7 @@ def make_candidate(
         "command": f"touch {project / 'EXECUTED'}",
         "runtime_seconds": runtime,
         "exit_code": exit_code,
+        "input_hashes": {"01_inputs/data.csv": input_digest},
         "artifacts": {"artifacts/results.csv": digest},
     }
     (candidate / "solution.json").write_text(json.dumps(solution), encoding="utf-8")
@@ -79,6 +86,15 @@ def test_bounded_lineage_stable_ids_and_safe_paths(tmp_path: Path) -> None:
     with pytest.raises(TreeError, match="escapes project"):
         add_candidate(project, "08_candidates/link", "escape", "unsafe")
     assert first_path.is_dir() and second_path.is_dir() and third_path.is_dir()
+
+
+def test_candidate_count_limit_is_enforced(tmp_path: Path) -> None:
+    project = init_project(tmp_path, max_candidates=1)
+    make_candidate(project, "first")
+    make_candidate(project, "second")
+    add_candidate(project, "08_candidates/first", "first", "first branch")
+    with pytest.raises(TreeError, match="candidate limit reached"):
+        add_candidate(project, "08_candidates/second", "second", "second branch")
 
 
 @pytest.mark.parametrize(
@@ -122,9 +138,11 @@ def test_evaluation_verifies_evidence_and_preserves_readiness_files(tmp_path: Pa
     assert evaluated["evaluation"]["gates"] == {
         "contract_valid": True,
         "run_succeeded": True,
+        "inputs_verified": True,
         "feasible": True,
         "validation_passed": True,
         "evidence_verified": True,
+        "snapshot_current": True,
     }
     assert readiness.read_bytes() == before
     assert not (project / "EXECUTED").exists()
@@ -140,6 +158,39 @@ def test_hash_mismatch_blocks_candidate(tmp_path: Path) -> None:
     evaluated = evaluate_candidate(project, node["candidate_id"])
     assert evaluated["status"] == "blocked"
     assert "evidence hash mismatch" in evaluated["evaluation"]["blocking_reasons"][0]
+
+
+def test_input_hash_mismatch_and_non_finite_metric_block_candidates(tmp_path: Path) -> None:
+    project = init_project(tmp_path)
+    first_path = make_candidate(project, "input-tampered")
+    first = add_candidate(project, "08_candidates/input-tampered", "input", "tampered input")
+    (project / "01_inputs/data.csv").write_text("changed")
+    evaluated = evaluate_candidate(project, first["candidate_id"])
+    assert evaluated["status"] == "blocked"
+    assert "input hash mismatch" in evaluated["evaluation"]["blocking_reasons"][0]
+
+    (project / "01_inputs/data.csv").write_bytes(b"x,y\n1,2\n")
+    second_path = make_candidate(project, "non-finite")
+    solution_path = second_path / "solution.json"
+    solution = json.loads(solution_path.read_text())
+    solution["metrics"]["objective"] = float("nan")
+    solution_path.write_text(json.dumps(solution))
+    second = add_candidate(project, "08_candidates/non-finite", "nan", "invalid metric")
+    evaluated = evaluate_candidate(project, second["candidate_id"])
+    assert evaluated["status"] == "blocked"
+    assert "cannot read valid JSON" in evaluated["evaluation"]["blocking_reasons"][0]
+    assert first_path.is_dir()
+
+
+def test_tree_contract_rejects_status_evaluation_drift(tmp_path: Path) -> None:
+    project = init_project(tmp_path)
+    make_candidate(project, "good")
+    node = add_candidate(project, "08_candidates/good", "good", "valid candidate")
+    evaluate_candidate(project, node["candidate_id"])
+    tree = get_tree(project)
+    tree["nodes"][0]["status"] = "blocked"
+    with pytest.raises(TreeError, match="blocked status is inconsistent"):
+        validate_tree(tree)
 
 
 def test_selection_is_deterministic_and_can_reselect(tmp_path: Path) -> None:
@@ -162,17 +213,59 @@ def test_selection_is_deterministic_and_can_reselect(tmp_path: Path) -> None:
     assert next(node for node in tree["nodes"] if node["candidate_id"] == "C002")["status"] == "evaluated"
 
 
+def test_selection_rejects_different_input_snapshots(tmp_path: Path) -> None:
+    project = init_project(tmp_path)
+    make_candidate(project, "first")
+    second_path = make_candidate(project, "second")
+    alternate = project / "01_inputs/alternate.csv"
+    alternate.write_bytes(b"x,y\n2,3\n")
+    run_path = second_path / "run_record.json"
+    run = json.loads(run_path.read_text())
+    run["input_hashes"] = {"01_inputs/alternate.csv": hashlib.sha256(alternate.read_bytes()).hexdigest()}
+    run_path.write_text(json.dumps(run))
+    first = add_candidate(project, "08_candidates/first", "first", "first input")
+    second = add_candidate(project, "08_candidates/second", "second", "second input")
+    evaluate_candidate(project, first["candidate_id"])
+    evaluate_candidate(project, second["candidate_id"])
+    with pytest.raises(TreeError, match="incomparable input provenance"):
+        select_candidate(project)
+
+
+def test_selection_blocks_stale_evaluation_snapshot(tmp_path: Path) -> None:
+    project = init_project(tmp_path)
+    candidate = make_candidate(project, "stale")
+    node = add_candidate(project, "08_candidates/stale", "stale", "evaluate then mutate")
+    evaluate_candidate(project, node["candidate_id"])
+    (candidate / "report.md").write_text("changed after evaluation")
+    with pytest.raises(TreeError, match="no eligible"):
+        select_candidate(project)
+    stored = get_tree(project)["nodes"][0]
+    assert stored["status"] == "blocked"
+    assert stored["evaluation"]["gates"]["snapshot_current"] is False
+    assert "candidate artifacts changed after evaluation" in stored["evaluation"]["blocking_reasons"]
+
+
 def test_mixed_benchmark_coverage_blocks_selection(tmp_path: Path) -> None:
     project = init_project(tmp_path)
     source = ROOT / "benchmarks/fixtures/optimization_capacity/good"
     benchmark_candidate = project / "08_candidates/benchmark"
     shutil.copytree(source, benchmark_candidate)
+    case_input = ROOT / "benchmarks/cases/optimization_capacity/input/data.csv"
+    project_input = project / "input/data.csv"
+    project_input.parent.mkdir(parents=True)
+    shutil.copy2(case_input, project_input)
     solution_path = benchmark_candidate / "solution.json"
     solution = json.loads(solution_path.read_text())
     solution["metrics"]["validation_score"] = .9
     solution["checks"].update({"feasible": True, "validation_passed": True})
     solution_path.write_text(json.dumps(solution))
-    make_candidate(project, "generic", validation=.95)
+    generic_candidate = make_candidate(project, "generic", validation=.95)
+    generic_run_path = generic_candidate / "run_record.json"
+    generic_run = json.loads(generic_run_path.read_text())
+    generic_run["input_hashes"] = {
+        "input/data.csv": hashlib.sha256(project_input.read_bytes()).hexdigest()
+    }
+    generic_run_path.write_text(json.dumps(generic_run))
     first = add_candidate(project, "08_candidates/benchmark", "benchmark", "benchmark branch")
     second = add_candidate(project, "08_candidates/generic", "generic", "generic branch")
     benchmark_case = ROOT / "benchmarks/cases/optimization_capacity"
@@ -181,6 +274,27 @@ def test_mixed_benchmark_coverage_blocks_selection(tmp_path: Path) -> None:
     evaluate_candidate(project, second["candidate_id"])
     with pytest.raises(TreeError, match="mixed or incomparable"):
         select_candidate(project)
+
+
+def test_blocked_benchmark_verdict_blocks_tree_node(tmp_path: Path) -> None:
+    project = init_project(tmp_path)
+    source = ROOT / "benchmarks/fixtures/optimization_capacity/bad"
+    candidate = project / "08_candidates/blocked"
+    shutil.copytree(source, candidate)
+    case_input = ROOT / "benchmarks/cases/optimization_capacity/input/data.csv"
+    project_input = project / "input/data.csv"
+    project_input.parent.mkdir(parents=True)
+    shutil.copy2(case_input, project_input)
+    solution_path = candidate / "solution.json"
+    solution = json.loads(solution_path.read_text())
+    solution["metrics"]["validation_score"] = .9
+    solution["checks"].update({"feasible": True, "validation_passed": True})
+    solution_path.write_text(json.dumps(solution))
+    node = add_candidate(project, "08_candidates/blocked", "blocked", "infeasible benchmark")
+    evaluated = evaluate_candidate(project, node["candidate_id"], ROOT / "benchmarks/cases/optimization_capacity")
+    assert evaluated["status"] == "blocked"
+    assert evaluated["evaluation"]["benchmark"]["verdict"] == "blocked"
+    assert "Benchmark verdict is blocked" in evaluated["evaluation"]["blocking_reasons"]
 
 
 def test_cli_smoke(tmp_path: Path) -> None:
