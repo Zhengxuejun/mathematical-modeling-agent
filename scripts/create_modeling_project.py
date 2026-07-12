@@ -38,6 +38,7 @@ DIRS = [
     "06_过程记录/一致性检查",
     "06_过程记录/失败模式排雷",
     "07_提交包",
+    "08_候选方案",
 ]
 
 README = """# {project_name}
@@ -54,6 +55,7 @@ README = """# {project_name}
 - `05_报告定稿/`：DOCX/PDF/LaTeX/Markdown
 - `06_过程记录/`：草稿、实验日志、状态机、一致性检查、竞赛质控与失败模式排雷
 - `07_提交包/`：最终提交文件
+- `08_候选方案/`：AIDE 式候选模型提交与父子改进分支
 
 ## 当前状态
 
@@ -91,6 +93,7 @@ python 02_代码/10_result_interpretation.py
 python 02_代码/11_report_assembler.py
 python 02_代码/12_repair_advisor.py
 python 02_代码/14_competition_evidence.py
+python 02_代码/19_candidate_solution_tree.py init --objective-metric objective --direction maximize
 python 02_代码/18_contest_evidence_sync.py --dry-run
 python 02_代码/18_contest_evidence_sync.py
 python 02_代码/17_contest_qc.py --phase final
@@ -154,6 +157,13 @@ FAILURE_LOG = """# 失败模式排雷记录
 | 图表/正文/摘要不一致 | 未检查 |  |  |
 """
 
+CANDIDATE_README = """# 候选方案目录
+
+每个候选方案使用独立子目录，并至少包含 `solution.json`、`run_record.json`、`report.md` 和可哈希验证的证据文件。
+
+候选树只读取已经运行产生的产物，不执行 `run_record.json` 中记录的命令。推荐先登记 baseline，再以父节点和改进假设创建有限深度分支。`selected` 只表示当前配置下最优的合格候选，不等于 `paper_ready`、`final_ready` 或 `competition_ready`。
+"""
+
 SCRIPT_TEMPLATES = {
     "00_data_audit.py": """from pathlib import Path\nimport csv\nimport json\n\nBASE = Path(__file__).resolve().parents[1]\nRAW = BASE / '01_原始数据'\nOUT = BASE / '03_结果表格'\nOUT.mkdir(exist_ok=True)\n\ndef audit_csv(path):\n    rows = 0\n    missing = 0\n    columns = []\n    with path.open('r', encoding='utf-8-sig', errors='ignore', newline='') as f:\n        reader = csv.reader(f)\n        for i, row in enumerate(reader):\n            if i == 0:\n                columns = [str(x) for x in row]\n                continue\n            rows += 1\n            missing += sum(1 for x in row if str(x).strip() == '')\n    return {'rows': rows, 'cols': len(columns), 'columns': '|'.join(columns), 'missing_cells': missing}\n\nrecords = []\nfor path in sorted(RAW.rglob('*')):\n    if not path.is_file() or path.name.startswith('~$'):\n        continue\n    info = {'file': str(path.relative_to(BASE)), 'suffix': path.suffix.lower(), 'size_bytes': path.stat().st_size}\n    try:\n        if path.suffix.lower() == '.csv':\n            info.update(audit_csv(path))\n        elif path.suffix.lower() in {'.xlsx', '.xls'}:\n            info['note'] = 'spreadsheet detected; install optional openpyxl/pandas or add problem-specific parser for deep audit'\n        elif path.suffix.lower() == '.json':\n            obj = json.loads(path.read_text(encoding='utf-8', errors='ignore'))\n            info['json_type'] = type(obj).__name__\n            if isinstance(obj, list):\n                info['rows'] = len(obj)\n    except Exception as e:\n        info['error'] = repr(e)\n    records.append(info)\n\nout = OUT / 'data_audit.csv'\nfields = sorted({k for r in records for k in r.keys()} | {'file', 'suffix', 'size_bytes'})\nwith out.open('w', encoding='utf-8-sig', newline='') as f:\n    writer = csv.DictWriter(f, fieldnames=fields)\n    writer.writeheader()\n    writer.writerows(records)\nprint(f'Wrote {out} with {len(records)} file records')\n""",
     "01_preprocess.py": """from pathlib import Path\n\nBASE = Path(__file__).resolve().parents[1]\nprint('TODO: preprocess raw data into processed datasets; never overwrite raw data')\n""",
@@ -174,6 +184,7 @@ SCRIPT_TEMPLATES = {
     "16_domain_checker_templates.py": """from pathlib import Path\nimport subprocess\nimport sys\n\nBASE = Path(__file__).resolve().parents[1]\nSCRIPT = Path('__SKILL_SCRIPT_DIR__/domain_checker_template_builder.py')\nraise SystemExit(subprocess.call([sys.executable, str(SCRIPT), str(BASE)] + sys.argv[1:]))\n""",
     "17_contest_qc.py": """from pathlib import Path\nimport subprocess\nimport sys\n\nBASE = Path(__file__).resolve().parents[1]\nSCRIPT = Path('__SKILL_SCRIPT_DIR__/contest_qc_gate.py')\nraise SystemExit(subprocess.call([sys.executable, str(SCRIPT), str(BASE)] + sys.argv[1:]))\n""",
     "18_contest_evidence_sync.py": """from pathlib import Path\nimport subprocess\nimport sys\n\nBASE = Path(__file__).resolve().parents[1]\nSCRIPT = Path('__SKILL_SCRIPT_DIR__/contest_evidence_sync.py')\nraise SystemExit(subprocess.call([sys.executable, str(SCRIPT), str(BASE)] + sys.argv[1:]))\n""",
+    "19_candidate_solution_tree.py": """from pathlib import Path\nimport subprocess\nimport sys\n\nBASE = Path(__file__).resolve().parents[1]\nSCRIPT = Path('__SKILL_SCRIPT_DIR__/candidate_solution_tree.py')\nraise SystemExit(subprocess.call([sys.executable, str(SCRIPT), sys.argv[1], str(BASE)] + sys.argv[2:])) if len(sys.argv) > 1 else 2\n""",
 }
 
 REQ = """# Core scaffold uses only Python stdlib for data_audit/baseline/model_main/sensitivity.
@@ -208,6 +219,7 @@ def create_project(project_name: str, base: Path, force: bool = False) -> Path:
     write_text(project_dir / "06_过程记录/一致性检查/report_consistency_check.md", CONSISTENCY_CHECK, force=force)
     write_text(project_dir / "06_过程记录/失败模式排雷/failure_pattern_log.md", FAILURE_LOG, force=force)
     write_text(project_dir / "06_过程记录/problem_analysis.md", "# 题目解析\n\n## 小问拆解\n\n## 数据清单\n\n## 输出要求\n\n## 题型路由\n", force=force)
+    write_text(project_dir / "08_候选方案/README.md", CANDIDATE_README, force=force)
 
     metadata = {
         "project_name": project_name,
@@ -228,6 +240,7 @@ def create_project(project_name: str, base: Path, force: bool = False) -> Path:
         "domain_checker_template_builder": "02_代码/16_domain_checker_templates.py",
         "contest_qc_gate": "02_代码/17_contest_qc.py",
         "contest_evidence_sync": "02_代码/18_contest_evidence_sync.py",
+        "candidate_solution_tree": "02_代码/19_candidate_solution_tree.py",
         "quality_gate_plus": "scripts/quality_gate_plus.py",
     }
     write_text(project_dir / "project_meta.json", json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", force=force)
