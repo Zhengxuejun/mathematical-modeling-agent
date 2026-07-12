@@ -44,6 +44,8 @@ def test_public_license_and_copyright_are_current() -> None:
     assert "license: MPL-2.0" in skill
     assert "Mozilla Public License 2.0" in install
     assert "Mozilla Public License 2.0" in contributing
+    for text in (readme, notice, (ROOT / "RELEASE_NOTES.md").read_text(encoding="utf-8")):
+        assert "MIT License" not in text
     for text in (readme, skill, install):
         assert "采用 [MIT License]" not in text
         assert "使用 MIT License" not in text

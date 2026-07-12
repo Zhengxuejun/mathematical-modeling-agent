@@ -132,4 +132,4 @@ python3 -m pytest -q
 
 本项目是独立实现，工作流层面参考了公开研究项目 [usail-hkust/LLM-MM-Agent](https://github.com/usail-hkust/LLM-MM-Agent)，不包含其源码、数据集、提示词、模型权重或媒体资源。详细来源边界见 [NOTICE](NOTICE)。
 
-当前版本由 Zhengxuejun 按 [Mozilla Public License 2.0](LICENSE) 发布。在本次授权迁移前已按 MIT License 发布的版本，其既有授权继续有效。上游项目材料不适用本仓库的 MPL-2.0 授权，复制上游内容前应单独核对其许可证。
+当前版本由 Zhengxuejun 按 [Mozilla Public License 2.0](LICENSE) 发布。上游项目材料不适用本仓库的 MPL-2.0 授权，复制上游内容前应单独核对其许可证。
