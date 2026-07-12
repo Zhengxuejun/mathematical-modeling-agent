@@ -1,7 +1,7 @@
 {
   "name": "mathematical-modeling-agent",
   "version": "1.2.0",
-  "created_at": "2026-07-12T23:04:53",
+  "created_at": "2026-07-12T23:29:12",
   "distribution": "portable Hermes skill package",
   "file_count": 158,
   "excluded": [
@@ -34,23 +34,23 @@
     },
     {
       "path": "LICENSE",
-      "bytes": 1069,
-      "sha256": "4c52a8e9d81c3afb5a25c5690d30dfadb020613832383e26966bda187b41d56a"
+      "bytes": 1066,
+      "sha256": "471211cd6ff3808e33549ffb3f270b4b3ad1cf9b4e84c5f1754d5d6e209a0333"
     },
     {
       "path": "NOTICE",
-      "bytes": 1031,
-      "sha256": "b026281aafa419612f08c258252731a7c221c10864c8f8c5a5551bc4ae1ab1bd"
+      "bytes": 1029,
+      "sha256": "640a756c176c5d0e371acf796ecd34826e74960a55b039fc580eeac2853ff377"
     },
     {
       "path": "README.md",
-      "bytes": 6779,
-      "sha256": "7e011810946e06c92e18efa6d07b7b436b92c03b9ec909af8f12138a75759bfe"
+      "bytes": 6815,
+      "sha256": "8d962fe4bae7c069b8e223943feca648af8c157fea97a788561a1f62e9e3c3da"
     },
     {
       "path": "RELEASE_NOTES.md",
-      "bytes": 2508,
-      "sha256": "f731713dde74ac2c7cecc9be5f78878e6894772fb8c490ec9fab5e0b6465e097"
+      "bytes": 2594,
+      "sha256": "e0f7404cbfa6ec1cf6c36c91e5894820f665289877782c44d3004d8feb07620b"
     },
     {
       "path": "SECURITY.md",
@@ -779,8 +779,8 @@
     },
     {
       "path": "scripts/tests/test_repository_collaboration_config.py",
-      "bytes": 2901,
-      "sha256": "be09741dc272757eecf1cefe3ac417a0c3b873d69599ddc2e8fb036b06ca0096"
+      "bytes": 3308,
+      "sha256": "f3c13877cdf9db797ee25857a100681e25e3136c29bba2aa9a2f24e566759599"
     },
     {
       "path": "scripts/tests/test_submission_package_contract.py",

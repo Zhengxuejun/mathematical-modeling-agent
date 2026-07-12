@@ -29,6 +29,16 @@ def test_public_collaboration_documents_exist() -> None:
     assert "contest attachments" in security.lower()
 
 
+def test_public_copyright_holder_is_correct() -> None:
+    license_text = (ROOT / "LICENSE").read_text(encoding="utf-8")
+    notice = (ROOT / "NOTICE").read_text(encoding="utf-8")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    incorrect_name = "郑学" + "军"
+    for text in (license_text, notice, readme):
+        assert "郑学君" in text
+        assert incorrect_name not in text
+
+
 def test_readme_links_collaboration_policies() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     assert "[CONTRIBUTING.md](CONTRIBUTING.md)" in readme
