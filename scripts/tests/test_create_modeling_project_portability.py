@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -20,4 +21,11 @@ def test_scaffold_wrappers_resolve_the_current_installed_skill_path(tmp_path: Pa
     assert "__SKILL_SCRIPT_DIR__" in source
     assert "Path('__SKILL_SCRIPT_DIR__/modeling_pipeline.py')" in source
     assert (project / "02_代码" / "17_contest_qc.py").is_file()
+    evidence_sync = project / "02_代码" / "18_contest_evidence_sync.py"
+    assert evidence_sync.is_file()
+    evidence_sync_text = evidence_sync.read_text(encoding="utf-8")
+    assert str(SCRIPT_DIR / "contest_evidence_sync.py") in evidence_sync_text
+    assert "__SKILL_SCRIPT_DIR__" not in evidence_sync_text
+    metadata = json.loads((project / "project_meta.json").read_text(encoding="utf-8"))
+    assert metadata["contest_evidence_sync"] == "02_代码/18_contest_evidence_sync.py"
     assert (project / "06_过程记录" / "竞赛质控" / "deliverable_matrix.csv").is_file()
