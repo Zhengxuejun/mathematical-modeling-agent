@@ -9,3 +9,5 @@
 - 人工编辑后的报告草稿默认不再被自动拼装器覆盖；开放 P1、模板内容或项目外证据会阻断正式交付。
 - 仓库内容采用 MIT License，并通过 NOTICE 明确与 `usail-hkust/LLM-MM-Agent` 的方法论来源和代码/数据边界。
 - Pull request 与 `main` 推送会在 Python 3.11、3.13 上自动运行完整测试，并配套贡献与安全报告规范。
+- 新增 `contest_evidence_sync.py`：从题目解析、正式运行、结果表和图表生成待审核候选，幂等保留人工确认状态，并通过事务日志、回滚和恢复防止半写入。
+- 完整 Pipeline 在报告审计后、Contest QC 前自动同步候选；schema、事务或重复身份冲突会阻断旧 QC 结果继续打包。

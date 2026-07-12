@@ -26,6 +26,10 @@ python 02_代码/17_contest_qc.py --phase model --strict
 
 # 终稿前证据、评委风险、匿名与复现门禁
 python 02_代码/17_contest_qc.py --phase final --strict
+
+# 从现有小问、结果表和图表预填待审核候选
+python 02_代码/18_contest_evidence_sync.py --dry-run
+python 02_代码/18_contest_evidence_sync.py
 ```
 
 输出：
@@ -69,13 +73,16 @@ final_ready   当前提交级证据通过；不代表必然获奖
 
 ## 与现有 Pipeline 的关系
 
-总控 Pipeline 在报告拼装后自动运行 `contest_qc_gate.py --phase final`，并在随后的 `competition_evidence_builder.py` 与 `competition_readiness_gate.py` 中读取其输出。
+总控 Pipeline 在报告拼装与一致性审计后先运行 `contest_evidence_sync.py`，再运行 `contest_qc_gate.py --phase final`，并在随后的 `competition_evidence_builder.py` 与 `competition_readiness_gate.py` 中读取其输出。
 
+- `contest_evidence_sync`：按小问、项目内结果表/图表和 completed run 精确路径关联生成 `candidate` 行；不覆盖人工非空字段，不生成数学核验、论文主张或合规通过状态。
 - `contest_qc_gate`：证据账本、评委风险、提交合规的细粒度门禁。
 - `competition_evidence_builder`：从项目文件生成证据索引，识别 placeholder、模板 checker 和模型信号。
 - `competition_readiness_gate`：把 workflow/model/competition 分层，给出是否达到可参赛评审口径的综合判断。
 
-三者互补：`final_ready` 不是 `competition_ready` 的替代；后者仍会因 placeholder、未实现领域 checker、模型结果不足等原因拦截项目。
+四者互补：`final_ready` 不是 `competition_ready` 的替代；后者仍会因 placeholder、未实现领域 checker、模型结果不足等原因拦截项目。
+
+同步报告写入 `06_过程记录/竞赛质控/evidence_sync.json` 与 `evidence_sync.md`。重复运行保持幂等；坏表头、重复身份或事务异常返回非零，Pipeline 会跳过 Contest QC，避免沿用旧门禁结果。同步生成的 `candidate` 不计入 `computed`、`checked` 或 `paper_ready` 证据。
 
 ## 红线
 
