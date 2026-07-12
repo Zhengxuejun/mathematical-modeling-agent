@@ -35,3 +35,11 @@ def test_cli_validate_suite_and_single_run(tmp_path: Path) -> None:
     assert run.returncode == 0, run.stdout + run.stderr
     assert (suite_output / "benchmark_suite.json").is_file()
     assert (run_output / "benchmark_result.json").is_file()
+
+
+def test_cli_missing_submission_does_not_create_it(tmp_path: Path) -> None:
+    script = ROOT / "scripts/modeling_benchmark.py"
+    missing = tmp_path / "missing"
+    run = subprocess.run([sys.executable, str(script), "run", "--case", str(ROOT / "benchmarks/cases/optimization_capacity"), "--submission", str(missing)], text=True, capture_output=True)
+    assert run.returncode == 2
+    assert not missing.exists()

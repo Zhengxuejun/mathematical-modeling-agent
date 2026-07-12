@@ -8,6 +8,7 @@ from typing import Any
 from . import HARNESS_VERSION
 from .contracts import DIMENSIONS
 from .grader import grade
+from .paths import PathValidationError, validate_relative_path
 
 
 def run_suite(fixtures_dir: Path) -> dict[str, Any]:
@@ -25,6 +26,11 @@ def run_suite(fixtures_dir: Path) -> dict[str, Any]:
     for expected in expectations["fixtures"]:
         case_id = expected["case_id"]
         fixture = expected["fixture"]
+        try:
+            if len(validate_relative_path(case_id).parts) != 1 or len(validate_relative_path(fixture).parts) != 1:
+                raise PathValidationError("fixture identifiers must be single path segments")
+        except (PathValidationError, TypeError) as exc:
+            raise ValueError(f"unsafe fixture expectation: {case_id!r}/{fixture!r}") from exc
         result = grade(cases_dir / case_id, fixtures_dir / case_id / fixture)
         block_ids = sorted(item["id"] for item in result.hard_blocks)
         issues = []
@@ -84,4 +90,3 @@ def write_suite(result: dict[str, Any], output_dir: Path) -> tuple[Path, Path]:
     json_path.write_text(suite_json(result), encoding="utf-8")
     markdown_path.write_text(suite_markdown(result), encoding="utf-8")
     return json_path, markdown_path
-

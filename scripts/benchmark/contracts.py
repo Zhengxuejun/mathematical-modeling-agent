@@ -30,7 +30,7 @@ class ContractError(ValueError):
 def _load_json(path: Path) -> dict[str, Any]:
     try:
         value = json.loads(path.read_text(encoding="utf-8"), parse_constant=lambda value: (_ for _ in ()).throw(ValueError(value)))
-    except (OSError, json.JSONDecodeError, ValueError) as exc:
+    except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
         raise ContractError(f"cannot read valid JSON from {path}: {exc}") from exc
     if not isinstance(value, dict):
         raise ContractError(f"JSON root must be an object: {path}")
@@ -79,6 +79,9 @@ def load_case(root: Path) -> CaseContract:
     case_id = raw.get("case_id")
     if not isinstance(case_id, str) or not case_id or root.name != case_id:
         raise ContractError("case_id must be non-empty and match the directory name")
+    for field in ("category", "difficulty"):
+        if not isinstance(raw.get(field), str) or not raw[field]:
+            raise ContractError(f"case {field} must be a non-empty string")
     dimensions = raw.get("dimensions")
     if not isinstance(dimensions, dict) or set(dimensions) != set(DIMENSIONS):
         raise ContractError(f"dimensions must contain exactly: {', '.join(DIMENSIONS)}")
@@ -90,6 +93,8 @@ def load_case(root: Path) -> CaseContract:
     required_files = raw.get("required_files")
     if not isinstance(required_files, list) or not required_files:
         raise ContractError("required_files must be a non-empty list")
+    if len(required_files) != len(set(required_files)) or not {"solution.json", "run_record.json", "report.md"}.issubset(required_files):
+        raise ContractError("required_files must uniquely include solution.json, run_record.json, and report.md")
     for path in required_files:
         try:
             validate_relative_path(path)
@@ -99,9 +104,13 @@ def load_case(root: Path) -> CaseContract:
     input_files = raw.get("input_files")
     if not isinstance(input_files, list) or not input_files:
         raise ContractError("input_files must be a non-empty list")
+    input_paths: set[str] = set()
     for item in input_files:
         if not isinstance(item, dict) or set(item) != {"path", "sha256"}:
             raise ContractError("each input file needs path and sha256")
+        if item["path"] in input_paths:
+            raise ContractError(f"duplicate input path: {item['path']}")
+        input_paths.add(item["path"])
         if not isinstance(item.get("sha256"), str) or not SHA256_RE.fullmatch(item["sha256"]):
             raise ContractError("input sha256 must be 64 lowercase hexadecimal characters")
         try:
@@ -146,7 +155,14 @@ def load_case(root: Path) -> CaseContract:
                 raise ContractError(f"invalid range: {rule['id']}")
             if rule["type"] == "runtime" and rule["maximum"] < 0:
                 raise ContractError(f"invalid runtime budget: {rule['id']}")
-    return CaseContract(root, case_id, str(raw.get("category", "")), str(raw.get("difficulty", "")), dict(dimensions), tuple(required_files), tuple(input_files), tuple(rules), expected)
+        if "expected_path" in rule:
+            if not isinstance(rule["expected_path"], str):
+                raise ContractError(f"invalid expected path: {rule['id']}")
+            try:
+                lookup(expected, rule["expected_path"])
+            except KeyError as exc:
+                raise ContractError(f"missing expected value for rule: {rule['id']}") from exc
+    return CaseContract(root, case_id, raw["category"], raw["difficulty"], dict(dimensions), tuple(required_files), tuple(input_files), tuple(rules), expected)
 
 
 def load_submission(root: Path, case: CaseContract) -> SubmissionContract:
@@ -191,7 +207,10 @@ def load_submission(root: Path, case: CaseContract) -> SubmissionContract:
                 raise ContractError(str(exc)) from exc
             if not isinstance(digest, str) or not SHA256_RE.fullmatch(digest):
                 raise ContractError(f"run_record {field} contains an invalid SHA-256")
-    report = (root / "report.md").read_text(encoding="utf-8")
+    try:
+        report = (root / "report.md").read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise ContractError(f"cannot read report.md: {exc}") from exc
     return SubmissionContract(root, solution, run_record, report)
 
 

@@ -53,6 +53,22 @@ def test_case_rejects_input_hash_mismatch(tmp_path: Path) -> None:
         load_case(root)
 
 
+def test_case_rejects_missing_expected_value(tmp_path: Path) -> None:
+    root = tmp_path / "demo"
+    write_case(root)
+    (root / "expected.json").write_text("{}")
+    with pytest.raises(ContractError, match="missing expected value"):
+        load_case(root)
+
+
+def test_case_rejects_non_finite_json_number(tmp_path: Path) -> None:
+    root = tmp_path / "demo"
+    write_case(root)
+    (root / "expected.json").write_text('{"objective": NaN}')
+    with pytest.raises(ContractError, match="valid JSON"):
+        load_case(root)
+
+
 def test_path_helper_rejects_traversal_absolute_and_escaping_symlink(tmp_path: Path) -> None:
     root = tmp_path / "root"
     root.mkdir()

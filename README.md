@@ -10,6 +10,7 @@
 - 从项目产物非破坏性同步 Contest QC 待审核候选，减少比赛中手填台账。
 - 报告与结果表、图表、数值和单位一致性审计。
 - Contest QC 与 competition readiness 分层门禁。
+- 离线确定性 Benchmark Harness，覆盖优化可行性、分组预测泄漏和评价排序稳定性。
 - manifest v2.0、SHA256 校验和原子化最终打包。
 
 ## 快速开始
@@ -36,6 +37,21 @@ python 02_代码/08_pipeline.py --entry 02_代码/03_model_main.py --zip
 ```
 
 证据同步器只为小问、结果表和图表创建 `candidate` 行，并保留所有人工确认字段。文件存在不代表模型正确、结果有效、图表已审或达到 `paper_ready`；正式状态仍只能通过运行记录、数学核验和 Contest QC 人工/机器审查推进。
+
+## 能力基准
+
+仓库内置三个原创合成微型案例和九个参考提交，用于检查评分、硬阻断和证据契约是否发生回归。运行时不需要网络、API key、LLM 调用或额外 Python 依赖：
+
+```bash
+python3 scripts/modeling_benchmark.py validate --cases benchmarks/cases
+python3 scripts/modeling_benchmark.py suite --fixtures benchmarks/fixtures
+python3 scripts/modeling_benchmark.py run \
+  --case benchmarks/cases/optimization_capacity \
+  --submission benchmarks/fixtures/optimization_capacity/good \
+  --output /tmp/modeling-benchmark-result
+```
+
+评分覆盖正确性、可行性、统计有效性、可复现性、证据一致性和效率。非零运行、输入哈希不符和不可信契约会判为 `invalid`；不可行解或明确数据泄漏会判为 `blocked`。Benchmark 分数不会写入或提升项目的 `competition_ready`，`strong` 也不代表能够获奖。
 
 完整流程只有在 `final_ready` 和 `competition_ready` 均通过后才发布 `07_提交包` 并推进到有效 S8。开放 P0/P1、模板内容、项目外证据、失败 manifest、文件缺失或 SHA256 不一致都会阻断交付。
 

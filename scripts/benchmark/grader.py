@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -36,6 +37,16 @@ def _invalid(case_dir: Path, message: str) -> BenchmarkResult:
     return BenchmarkResult(HARNESS_VERSION, case_dir.name, "", {}, (), {}, 0.0, 0.0, ({"id": "contract_integrity", "severity": "integrity"},), "invalid", (message,))
 
 
+def _case_hash(case: Any) -> str:
+    digest = hashlib.sha256()
+    for path in (case.root / "case.json", case.root / "expected.json", *(case.root / item["path"] for item in case.input_files)):
+        digest.update(path.relative_to(case.root).as_posix().encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
 def grade(case_dir: Path, submission_dir: Path) -> BenchmarkResult:
     try:
         case = load_case(case_dir)
@@ -55,7 +66,7 @@ def grade(case_dir: Path, submission_dir: Path) -> BenchmarkResult:
                 integrity_errors.append(("input_hash_mismatch", item["path"]))
     if integrity_errors:
         result = _invalid(case_dir, "; ".join(message for _, message in integrity_errors))
-        return BenchmarkResult(result.harness_version, case.case_id, sha256_file(case.root / "case.json"), {}, (), {}, 0.0, 0.0, tuple({"id": key, "severity": "integrity"} for key, _ in integrity_errors), "invalid", result.errors)
+        return BenchmarkResult(result.harness_version, case.case_id, _case_hash(case), {}, (), {}, 0.0, 0.0, tuple({"id": key, "severity": "integrity"} for key, _ in integrity_errors), "invalid", result.errors)
 
     rule_results = tuple(evaluate_rule(rule, case, submission) for rule in case.rules)
     dimension_scores: dict[str, float] = {}
@@ -79,5 +90,4 @@ def grade(case_dir: Path, submission_dir: Path) -> BenchmarkResult:
     else:
         verdict = "needs_work"
     hashes = {path: sha256_file(submission.root / path) for path in case.required_files}
-    return BenchmarkResult(HARNESS_VERSION, case.case_id, sha256_file(case.root / "case.json"), hashes, rule_results, dimension_scores, raw_score, total_score, blocks, verdict)
-
+    return BenchmarkResult(HARNESS_VERSION, case.case_id, _case_hash(case), hashes, rule_results, dimension_scores, raw_score, total_score, blocks, verdict)

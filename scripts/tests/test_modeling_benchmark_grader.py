@@ -57,3 +57,26 @@ def test_bad_run_record_is_invalid(tmp_path: Path) -> None:
     assert result.verdict == "invalid"
     assert result.total_score == 0
     assert result.hard_blocks[0]["id"] == "run_exit_code"
+
+
+def test_non_core_failures_can_receive_pass_verdict(tmp_path: Path) -> None:
+    case, submission = build_pair(tmp_path)
+    solution_path = submission / "solution.json"
+    solution = json.loads(solution_path.read_text())
+    solution["checks"]["evidence_consistency"] = False
+    solution["checks"]["efficiency"] = False
+    solution_path.write_text(json.dumps(solution))
+    result = grade(case, submission)
+    assert result.verdict == "pass"
+    assert result.total_score == 80
+
+
+def test_input_hash_mismatch_is_invalid(tmp_path: Path) -> None:
+    case, submission = build_pair(tmp_path)
+    run_path = submission / "run_record.json"
+    run = json.loads(run_path.read_text())
+    run["input_hashes"]["input/data.csv"] = "0" * 64
+    run_path.write_text(json.dumps(run))
+    result = grade(case, submission)
+    assert result.verdict == "invalid"
+    assert result.hard_blocks == ({"id": "input_hash_mismatch", "severity": "integrity"},)

@@ -1,9 +1,9 @@
 {
   "name": "mathematical-modeling-agent",
   "version": "1.2.0",
-  "created_at": "2026-07-12T21:26:46",
+  "created_at": "2026-07-12T22:00:06",
   "distribution": "portable Hermes skill package",
-  "file_count": 89,
+  "file_count": 146,
   "excluded": [
     ".git",
     ".pytest_cache",
@@ -19,8 +19,8 @@
     },
     {
       "path": ".gitignore",
-      "bytes": 73,
-      "sha256": "81177046bf9cb3aeed3b9af61988a086ce46257b186539d4c7b43465d620b04b"
+      "bytes": 92,
+      "sha256": "7a1150d3e81bf436c21ada629eb88fc6e119999368478f7a78fdea7962190586"
     },
     {
       "path": "CONTRIBUTING.md",
@@ -44,13 +44,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 3272,
-      "sha256": "e48b73fb4d92aa69fa68bead0630b938740ee6d7c459174e4e26bd90a4a7b39e"
+      "bytes": 4295,
+      "sha256": "39d0390eb990e003f59efbf16f4d49d2b30b6b13f7e3f13ec4db3e5e408b8e68"
     },
     {
       "path": "RELEASE_NOTES.md",
-      "bytes": 1516,
-      "sha256": "691fbb156df2e480c3b91a39bbb02da1e8a4bfb8a6ecf5879427d8fc8919de3c"
+      "bytes": 1906,
+      "sha256": "e8c44646ff6019e75118f33f43c1547314f4df9298b75ca764c4279566f47157"
     },
     {
       "path": "SECURITY.md",
@@ -59,8 +59,223 @@
     },
     {
       "path": "SKILL.md",
-      "bytes": 30489,
-      "sha256": "add22a4ddf3b508986ca356984033a076b2c0366d125fed46317c233073f04cf"
+      "bytes": 30907,
+      "sha256": "87a11ee13f5595fe36a299f13a1b716bfb9058472e8bfdcb200612402d272529"
+    },
+    {
+      "path": "benchmarks/cases/evaluation_rank_stability/case.json",
+      "bytes": 2367,
+      "sha256": "5457c5a2f472f449cce8141cd19128488d83bb56550fcdd553cedd681ae3f663"
+    },
+    {
+      "path": "benchmarks/cases/evaluation_rank_stability/expected.json",
+      "bytes": 54,
+      "sha256": "f8b0c96aff3f18049be3b8e38d9bfe18ae6e24e47266cfd6cb337b07c3dfdd31"
+    },
+    {
+      "path": "benchmarks/cases/evaluation_rank_stability/input/data.csv",
+      "bytes": 54,
+      "sha256": "2e327e3c18596e805c22454a733266c42c56d752d0e8e110fce9e532e85c9736"
+    },
+    {
+      "path": "benchmarks/cases/optimization_capacity/case.json",
+      "bytes": 2408,
+      "sha256": "910fc54a49167f3c64890ebba057f82059607045721180e5ba6339310ee486b0"
+    },
+    {
+      "path": "benchmarks/cases/optimization_capacity/expected.json",
+      "bytes": 63,
+      "sha256": "394e99b578dcf38caa929f74218157634b240905fb85ffbf3f4d46af75130de3"
+    },
+    {
+      "path": "benchmarks/cases/optimization_capacity/input/data.csv",
+      "bytes": 63,
+      "sha256": "0b9e9b5ee7b0dd5136f85972ac4288a8383e6e9a05ccf64cf3061b9e302e6665"
+    },
+    {
+      "path": "benchmarks/cases/prediction_group_leakage/case.json",
+      "bytes": 2403,
+      "sha256": "c9e99aa7199d9ce34fd2a3271221e5ccd3c45778cee837e164682fddca636721"
+    },
+    {
+      "path": "benchmarks/cases/prediction_group_leakage/expected.json",
+      "bytes": 64,
+      "sha256": "d311aade5f850c2c182132dcebe38096f864a60b4681f619d8f275289909bc79"
+    },
+    {
+      "path": "benchmarks/cases/prediction_group_leakage/input/data.csv",
+      "bytes": 65,
+      "sha256": "366f25e00fb004be1eb96488c108eaf21a427c168a3e70626b89373842fa9828"
+    },
+    {
+      "path": "benchmarks/fixtures/evaluation_rank_stability/bad/artifacts/results.csv",
+      "bytes": 16,
+      "sha256": "05a38190572d9de4b525523908dfc73b0f22c0fd489b7a54b2f860370943ecac"
+    },
+    {
+      "path": "benchmarks/fixtures/evaluation_rank_stability/bad/report.md",
+      "bytes": 66,
+      "sha256": "4495022208a9881e197d740d4e257f161a2293ad49df6e6280104e543e9ad922"
+    },
+    {
+      "path": "benchmarks/fixtures/evaluation_rank_stability/bad/run_record.json",
+      "bytes": 272,
+      "sha256": "69131dd32b64f11391352f8e4eaee725aa821fc5bee9a51e418b7836111c4c72"
+    },
+    {
+      "path": "benchmarks/fixtures/evaluation_rank_stability/bad/solution.json",
+      "bytes": 360,
+      "sha256": "27957de57cf8b2461b2d184f731c337ceab278137e8194d0341a670891990481"
+    },
+    {
+      "path": "benchmarks/fixtures/evaluation_rank_stability/good/artifacts/results.csv",
+      "bytes": 16,
+      "sha256": "05a38190572d9de4b525523908dfc73b0f22c0fd489b7a54b2f860370943ecac"
+    },
+    {
+      "path": "benchmarks/fixtures/evaluation_rank_stability/good/report.md",
+      "bytes": 82,
+      "sha256": "00351c243b36b8d03f1799f7343d95df8bb2ef7a0376b5084cbb610c6b20f9e7"
+    },
+    {
+      "path": "benchmarks/fixtures/evaluation_rank_stability/good/run_record.json",
+      "bytes": 272,
+      "sha256": "69131dd32b64f11391352f8e4eaee725aa821fc5bee9a51e418b7836111c4c72"
+    },
+    {
+      "path": "benchmarks/fixtures/evaluation_rank_stability/good/solution.json",
+      "bytes": 352,
+      "sha256": "3a31bfe67ffca8765a77057bf683b4bdeddd0eb40d16398d8c5d3720b097ad9d"
+    },
+    {
+      "path": "benchmarks/fixtures/evaluation_rank_stability/partial/report.md",
+      "bytes": 86,
+      "sha256": "1abff8fa9c5f330e28fe9fee27a38f17d9ccab4364aee8f254c7e37c874d13b6"
+    },
+    {
+      "path": "benchmarks/fixtures/evaluation_rank_stability/partial/run_record.json",
+      "bytes": 182,
+      "sha256": "1fb3d68eb5093e7c0442688fc0f570bf4e3d86ba856db591e610385e5ef3eb8c"
+    },
+    {
+      "path": "benchmarks/fixtures/evaluation_rank_stability/partial/solution.json",
+      "bytes": 350,
+      "sha256": "4c03d35d6e5da5744a4f186262fd77df4f8ba34b7b64361f0f2f167bccac1818"
+    },
+    {
+      "path": "benchmarks/fixtures/expectations.json",
+      "bytes": 1391,
+      "sha256": "968160ce84047f224e1bf64632c131c84a8e74cca2f10b7fc088f547b8827b6f"
+    },
+    {
+      "path": "benchmarks/fixtures/optimization_capacity/bad/artifacts/results.csv",
+      "bytes": 16,
+      "sha256": "05a38190572d9de4b525523908dfc73b0f22c0fd489b7a54b2f860370943ecac"
+    },
+    {
+      "path": "benchmarks/fixtures/optimization_capacity/bad/report.md",
+      "bytes": 54,
+      "sha256": "cc0d4e8ece8cf1c5d0e7923825ef6fb2598f6ce70904ece0316a0894c2b60a90"
+    },
+    {
+      "path": "benchmarks/fixtures/optimization_capacity/bad/run_record.json",
+      "bytes": 273,
+      "sha256": "eced5f17d9d96daa228e460ecc85640351cfbcc7b5ee5b6822b0464369a245a7"
+    },
+    {
+      "path": "benchmarks/fixtures/optimization_capacity/bad/solution.json",
+      "bytes": 340,
+      "sha256": "ecf29bb66e68a9f5b87331f4f579d10df514a4ae091c3d47b103c079edc94453"
+    },
+    {
+      "path": "benchmarks/fixtures/optimization_capacity/good/artifacts/results.csv",
+      "bytes": 16,
+      "sha256": "05a38190572d9de4b525523908dfc73b0f22c0fd489b7a54b2f860370943ecac"
+    },
+    {
+      "path": "benchmarks/fixtures/optimization_capacity/good/report.md",
+      "bytes": 110,
+      "sha256": "a8e7999f5373b77ddc4b734675496ad34ed45e27056e2e3885b69b1a8c9db2e4"
+    },
+    {
+      "path": "benchmarks/fixtures/optimization_capacity/good/run_record.json",
+      "bytes": 273,
+      "sha256": "eced5f17d9d96daa228e460ecc85640351cfbcc7b5ee5b6822b0464369a245a7"
+    },
+    {
+      "path": "benchmarks/fixtures/optimization_capacity/good/solution.json",
+      "bytes": 339,
+      "sha256": "0364d52f71e0f64e22adc6464ce7030760a3163fb4a43f1364c4752621201a79"
+    },
+    {
+      "path": "benchmarks/fixtures/optimization_capacity/partial/report.md",
+      "bytes": 84,
+      "sha256": "e1a44de8070e015425f7c8e309ba7b7aad0d99cce49abeadc671c0f1a3848e80"
+    },
+    {
+      "path": "benchmarks/fixtures/optimization_capacity/partial/run_record.json",
+      "bytes": 183,
+      "sha256": "fb36176ccedc3caae2e984a352b7fd4f8a4817794662a3b5db80198eb74d65b1"
+    },
+    {
+      "path": "benchmarks/fixtures/optimization_capacity/partial/solution.json",
+      "bytes": 338,
+      "sha256": "e5527e43c77873a05ac0a880d566770154bf389232a602577ab198c1dfb493fd"
+    },
+    {
+      "path": "benchmarks/fixtures/prediction_group_leakage/bad/artifacts/results.csv",
+      "bytes": 16,
+      "sha256": "05a38190572d9de4b525523908dfc73b0f22c0fd489b7a54b2f860370943ecac"
+    },
+    {
+      "path": "benchmarks/fixtures/prediction_group_leakage/bad/report.md",
+      "bytes": 60,
+      "sha256": "eb03b2f62b37b6b868a99d032dd0c4a5adea9cbfd2afaf05b1144ae06bc07db6"
+    },
+    {
+      "path": "benchmarks/fixtures/prediction_group_leakage/bad/run_record.json",
+      "bytes": 275,
+      "sha256": "4f3f6004d235ecd7d7f147f5a7fdc02b88b40cd3b28e28156ebfda2bad4766d7"
+    },
+    {
+      "path": "benchmarks/fixtures/prediction_group_leakage/bad/solution.json",
+      "bytes": 366,
+      "sha256": "89fa9caf32852a3c58c3ec7ea6ea33c3a9693f25a68e25ac592890de08517096"
+    },
+    {
+      "path": "benchmarks/fixtures/prediction_group_leakage/good/artifacts/results.csv",
+      "bytes": 16,
+      "sha256": "05a38190572d9de4b525523908dfc73b0f22c0fd489b7a54b2f860370943ecac"
+    },
+    {
+      "path": "benchmarks/fixtures/prediction_group_leakage/good/report.md",
+      "bytes": 80,
+      "sha256": "7e3a04de2df9e0210e2ff1a0a02a8abaf19c7374570b14fe70ffd3175dc0c0c6"
+    },
+    {
+      "path": "benchmarks/fixtures/prediction_group_leakage/good/run_record.json",
+      "bytes": 275,
+      "sha256": "4f3f6004d235ecd7d7f147f5a7fdc02b88b40cd3b28e28156ebfda2bad4766d7"
+    },
+    {
+      "path": "benchmarks/fixtures/prediction_group_leakage/good/solution.json",
+      "bytes": 366,
+      "sha256": "f0e2b28005c1c0b232660845c68b6fd4600f174c1eea8f208424d294693662d2"
+    },
+    {
+      "path": "benchmarks/fixtures/prediction_group_leakage/partial/report.md",
+      "bytes": 70,
+      "sha256": "d81a38dda687e4e4ff2e262086d4bfccfdd01728792e4110c08f66d363e6dcf5"
+    },
+    {
+      "path": "benchmarks/fixtures/prediction_group_leakage/partial/run_record.json",
+      "bytes": 185,
+      "sha256": "1515d216624b7bdf71ca4cc21863b58acfbc9118b0a9836ea54c2cc570d8d23c"
+    },
+    {
+      "path": "benchmarks/fixtures/prediction_group_leakage/partial/solution.json",
+      "bytes": 361,
+      "sha256": "bd23961939dceaadc1e7de43e55b42601915b3c5e287e6da5aa7e4cc7afb7ca5"
     },
     {
       "path": "docs/collaboration-ci-design.md",
@@ -73,9 +288,19 @@
       "sha256": "a595b823f370a2416a0d2067ce7508236234bfe4f11402cad49adeb27cd078e8"
     },
     {
+      "path": "docs/superpowers/plans/2026-07-12-modeling-benchmark-harness.md",
+      "bytes": 6172,
+      "sha256": "ce42aefecd8fd9c43c901ff504523d483de51fa0c7606d994ee30c8fd87dca99"
+    },
+    {
       "path": "docs/superpowers/specs/2026-07-12-contest-evidence-sync-design.md",
       "bytes": 8157,
       "sha256": "3290086c462dbd201376f7093003b0f9fef11eb9bec877e42248f29dd55ecbdb"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-07-12-modeling-benchmark-harness-design.md",
+      "bytes": 10623,
+      "sha256": "ba97971054d8773f7fbb36a24673fc68d741bb3aa52c3948c9b47bdd8bb7e6a8"
     },
     {
       "path": "references/automation-workflow.md",
@@ -144,8 +369,8 @@
     },
     {
       "path": "references/continuous-optimization-notes.md",
-      "bytes": 18062,
-      "sha256": "006fa473544cf58c420e22e61e17ea5bc15b98578711ef0e24c3f9eb765f9259"
+      "bytes": 19277,
+      "sha256": "751d1da0d4e408fff5aee63aa83ff559197492a3fcd4762fb281d8d913fbfd30"
     },
     {
       "path": "references/domain-checker-template-builder.md",
@@ -308,6 +533,41 @@
       "sha256": "ff3b8b78b26f642d11e8e709d84af2b4c2a944412de7e76fda833459e1fafa3d"
     },
     {
+      "path": "scripts/benchmark/__init__.py",
+      "bytes": 77,
+      "sha256": "5663e03907a28b541e68f334a2b9c4ed493aa40822254d400f4b9c8a8f812585"
+    },
+    {
+      "path": "scripts/benchmark/contracts.py",
+      "bytes": 10674,
+      "sha256": "1ab361685f530d26b0e98369629962f4c5b400b29a58313003df9ef05cd5c429"
+    },
+    {
+      "path": "scripts/benchmark/grader.py",
+      "bytes": 4319,
+      "sha256": "5b6967399c59f3c95130f89e195e0e472ba40871aaf24747103b07acef2d6bf2"
+    },
+    {
+      "path": "scripts/benchmark/paths.py",
+      "bytes": 1410,
+      "sha256": "2109f0b9f528f56e24b107c4440563522e362ccdb321d78f6e7ea715e70a5841"
+    },
+    {
+      "path": "scripts/benchmark/reporting.py",
+      "bytes": 1847,
+      "sha256": "42d2110f244109f9d1904791563b99680cace4247b312db5bdf1e5c95dd5f8e0"
+    },
+    {
+      "path": "scripts/benchmark/rules.py",
+      "bytes": 3193,
+      "sha256": "cb98f0cabb72e52eeff0159c95a1313dcadf371558724cf92a63227077305663"
+    },
+    {
+      "path": "scripts/benchmark/suite.py",
+      "bytes": 4530,
+      "sha256": "2d003278b5d31a37d1ff4ba51f441b60e7e79816150a353de1e1271b047419a7"
+    },
+    {
       "path": "scripts/competition_evidence_builder.py",
       "bytes": 20826,
       "sha256": "468c24731c6695388dd674ca543559744cfa0549c809e343e067f1881e96ce19"
@@ -346,6 +606,11 @@
       "path": "scripts/model_skeleton_router.py",
       "bytes": 14765,
       "sha256": "d570866de990b663eb999bcec690fb7dccc9ec36cfc436711f0b412c950d3c1c"
+    },
+    {
+      "path": "scripts/modeling_benchmark.py",
+      "bytes": 2991,
+      "sha256": "ed88ace20e5a44f3ab91dae74ba40de54bb7930b1f24b3ae12c5380f1cbf262f"
     },
     {
       "path": "scripts/modeling_pipeline.py",
@@ -416,6 +681,26 @@
       "path": "scripts/tests/test_finalize_modeling_project.py",
       "bytes": 3099,
       "sha256": "fec66674d55516d74fa9bf28c892bbcedbdc8a59458ed8b02cfd95f14237a5f6"
+    },
+    {
+      "path": "scripts/tests/test_modeling_benchmark_contracts.py",
+      "bytes": 3051,
+      "sha256": "6d98921daa1e197e6a2d0ea8611484b4c0f839aff33b79cc341dc77a844f6758"
+    },
+    {
+      "path": "scripts/tests/test_modeling_benchmark_grader.py",
+      "bytes": 3890,
+      "sha256": "f077897c260279af505701eda073bc086845a8e3c0b69d7f1fc49af2ea96f456"
+    },
+    {
+      "path": "scripts/tests/test_modeling_benchmark_rules.py",
+      "bytes": 2544,
+      "sha256": "c9ae551893204075248c7b5df97d156407db67ed06fa08fbd6075179242e4371"
+    },
+    {
+      "path": "scripts/tests/test_modeling_benchmark_suite.py",
+      "bytes": 2357,
+      "sha256": "b43f892df62db83861b0b9a61e8a7400ecf25a6c3255bb13ff954783493c0b1e"
     },
     {
       "path": "scripts/tests/test_modeling_pipeline_order.py",

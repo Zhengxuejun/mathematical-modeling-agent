@@ -11,3 +11,5 @@
 - Pull request 与 `main` 推送会在 Python 3.11、3.13 上自动运行完整测试，并配套贡献与安全报告规范。
 - 新增 `contest_evidence_sync.py`：从题目解析、正式运行、结果表和图表生成待审核候选，幂等保留人工确认状态，并通过事务日志、回滚和恢复防止半写入。
 - 完整 Pipeline 在报告审计后、Contest QC 前自动同步候选；schema、事务或重复身份冲突会阻断旧 QC 结果继续打包。
+- 新增完全离线、确定性的 Modeling Benchmark Harness：使用三个原创合成案例和九个 fixture 检查优化可行性、分组预测泄漏、评价排序稳定性、复现记录与证据一致性。
+- Benchmark 提供 `run`、`validate`、`suite` 三个命令，输出稳定 JSON/Markdown；它不调用 LLM，不使用网络，也不会自动改变 `competition_ready`。
