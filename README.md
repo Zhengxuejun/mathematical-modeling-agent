@@ -45,6 +45,19 @@ python3 -m pytest -q
 
 详细安装和工作流说明见 [INSTALL.md](INSTALL.md) 与 [SKILL.md](SKILL.md)。
 
+## 协作
+
+请通过 feature branch 或 fork 提交 pull request。GitHub 会在 Python 3.11 和 Python 3.13 上自动运行完整编译与测试，两个检查通过后才能合并到 `main`。
+
+本地提交前运行：
+
+```bash
+python3 -m compileall -q scripts
+python3 -m pytest -q
+```
+
+详细贡献要求见 [CONTRIBUTING.md](CONTRIBUTING.md)，安全问题与敏感材料报告方式见 [SECURITY.md](SECURITY.md)。GitHub 合并不会自动更新其他电脑上的 checkout，也不会自动覆盖 `~/.codex/skills/` 或 `~/.hermes/skills/` 中的安装副本。
+
 ## 来源与许可证
 
 本项目是独立实现，工作流层面参考了公开研究项目 [usail-hkust/LLM-MM-Agent](https://github.com/usail-hkust/LLM-MM-Agent)，不包含其源码、数据集、提示词、模型权重或媒体资源。详细来源边界见 [NOTICE](NOTICE)。

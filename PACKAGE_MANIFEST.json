@@ -1,9 +1,9 @@
 {
   "name": "mathematical-modeling-agent",
   "version": "1.2.0",
-  "created_at": "2026-07-12T12:56:53",
+  "created_at": "2026-07-12T13:02:56",
   "distribution": "portable Hermes skill package",
-  "file_count": 81,
+  "file_count": 85,
   "excluded": [
     ".git",
     ".pytest_cache",
@@ -13,9 +13,19 @@
   "sanitization": "All readable source/docs checked for the local absolute home path before archive creation.",
   "files": [
     {
+      "path": ".github/workflows/ci.yml",
+      "bytes": 860,
+      "sha256": "c04ea5b01b6d0271acb03f3fd4c0264a0ad0047ecd012acc65074e048968a5f4"
+    },
+    {
       "path": ".gitignore",
       "bytes": 62,
       "sha256": "dac2200506b774468de747a33bcfece13287a06ad591a3b0f03c995da2f601ef"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "bytes": 1656,
+      "sha256": "f3ada0e4c66f764893c33257360c56d96baf1b0310edd42c0c4d31082b6fc2a5"
     },
     {
       "path": "INSTALL.md",
@@ -34,13 +44,18 @@
     },
     {
       "path": "README.md",
-      "bytes": 2210,
-      "sha256": "ab47d48294af38e3b7789f6e1ba7800df5395facdf1b886df50106c1eef080dc"
+      "bytes": 2779,
+      "sha256": "d4c6f24aedfbd40d7a171d77eb1de3646fbfe002e5c333c5e0529e09a801e754"
     },
     {
       "path": "RELEASE_NOTES.md",
-      "bytes": 1036,
-      "sha256": "1eddff41496c0fa42942669e40baca4360898faeb7a713b910b32b5ec3e6e484"
+      "bytes": 1164,
+      "sha256": "0e69bcd3e679a970e3424df9c32c690b08b9789cda25b2ba82df765a9165de61"
+    },
+    {
+      "path": "SECURITY.md",
+      "bytes": 929,
+      "sha256": "167e2f177680c7433cf9829b878aec5140982bbec3809a2ec3f16bc6280813c2"
     },
     {
       "path": "SKILL.md",
@@ -396,6 +411,11 @@
       "path": "scripts/tests/test_report_section_assembler.py",
       "bytes": 1721,
       "sha256": "848aa40d5e95bb43665b3683c74c6251a1d5e26fb87d57d8a885391d66100574"
+    },
+    {
+      "path": "scripts/tests/test_repository_collaboration_config.py",
+      "bytes": 1298,
+      "sha256": "e2d26f60f726c0e05b647f28cce357055d895521a6399d464df67b0274155eb3"
     },
     {
       "path": "scripts/tests/test_submission_package_contract.py",

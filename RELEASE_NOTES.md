@@ -8,3 +8,4 @@
 - 提交包改为 staging 自校验与原子替换，manifest v2.0 和 SHA256 共同阻止失败包、陈旧文件和路径逃逸。
 - 人工编辑后的报告草稿默认不再被自动拼装器覆盖；开放 P1、模板内容或项目外证据会阻断正式交付。
 - 仓库内容采用 MIT License，并通过 NOTICE 明确与 `usail-hkust/LLM-MM-Agent` 的方法论来源和代码/数据边界。
+- Pull request 与 `main` 推送会在 Python 3.11、3.13 上自动运行完整测试，并配套贡献与安全报告规范。
