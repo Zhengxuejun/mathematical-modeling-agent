@@ -440,3 +440,22 @@ implemented_checker_pass
 只有 `implemented_checker_pass` 才能让 `domain_checker.status=pass`。要求正式 checker 输出存在、`issue_count=0`、`warn_count=0` 且无 TODO/template/starter 残留。
 
 已用测试项目验证：仅存在 generated_checkers 时，证据汇总器输出 `domain_checker=template_checker_only`，不会误判为 model_ready。
+
+## 18. 当前已实现：Contest QC 证据候选同步器
+
+已实现：
+
+```text
+scripts/contest_evidence_sync.py
+02_代码/18_contest_evidence_sync.py
+```
+
+目标：减少正式比赛中手工维护 `deliverable_matrix.csv`、`result_registry.csv` 和 `figure_evidence.csv` 的操作量。同步器从 `problem_analysis.md`、项目内结果表/图表以及 completed run 的精确输出路径发现候选，只补空字段并保留人工非空值。
+
+安全边界：新行固定为 `candidate`；不会生成数学核验、论文主张、视觉通过或合规状态，也不会把文件存在解释为 `paper_ready`。写盘采用锁、表头验证、临时文件、备份、事务日志、回滚和启动恢复。Pipeline 顺序为：
+
+```text
+report_audit → state_update_pre_finalize → contest_evidence_sync → contest_qc
+```
+
+同步失败会跳过 Contest QC 并阻止最终打包，防止陈旧门禁结果被误用。下一阶段优先建设真实竞赛 benchmark harness，再引入带执行指标的候选方案树；不要先扩展更多模型名称。

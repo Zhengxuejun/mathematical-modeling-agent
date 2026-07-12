@@ -60,6 +60,7 @@ metadata:
 - `scripts/submission_package_contract.py`：finalizer 与 S8 状态机共享的提交包契约，验证路径边界、文件库存、失败检查和 SHA256。
 - `scripts/competition_readiness_gate.py`：竞赛就绪度门禁，读取项目产物、审计 JSON、`contest_qc_gate.json` 与可选 `competition_evidence.json`，输出 workflow/model/competition 三层 readiness。
 - `scripts/contest_qc_gate.py`：竞赛质控账本门禁；`--init` 非破坏性创建登记表，`--phase early|model|final` 检查交付物、真实数据 PoC、运行/结果/主张追溯、评委风险和提交合规。它是证据账本真相源，`competition_evidence_builder.py` 仅作启发式证据索引。
+- `scripts/contest_evidence_sync.py`：Contest QC 待审核候选同步器；从小问、项目内结果表/图表和 completed run 精确路径关联生成 `candidate`，保留人工非空字段，并用可恢复事务防止半写入。文件发现不等于验证通过。
 - `scripts/competition_evidence_builder.py`：竞赛证据自动汇总器，在门禁前生成 `06_过程记录/competition_evidence.json/md`，让模型/checker/仿真/敏感性/论文资产证据可审计；现已区分 `template_checker_only` 与 `implemented_checker_pass`。
 - `scripts/model_skeleton_router.py`：模型骨架路由器，从 S1 题目解析生成题型、变量/参数、模型核心、领域 checker、验证资产与可选 starter code。
 - `scripts/domain_checker_template_builder.py`：领域 checker 模板生成器，基于模型骨架路由生成 `02_代码/generated_checkers/check_*.py` 和模板索引。
@@ -316,6 +317,7 @@ report/
 - `scripts/competition_readiness_gate.py`：竞赛就绪度门禁，用于区分工程闭环、正式模型、可参赛冲奖三个层级；真实比赛/冲奖目标下应作为最终门禁之一。
 - `scripts/competition_evidence_builder.py`：竞赛证据自动汇总器，用于把项目产物自动整理为 `competition_evidence.json`，供就绪度门禁和人工复盘使用。
 - `scripts/contest_qc_gate.py`：竞赛质控门禁。新项目先用 `--init --phase early` 建立登记表；主模型、真实附件 PoC 和正式运行完成后用 `--phase model`；终稿前用 `--phase final`。它验证真实数据 PoC、模型交接、数学检查、可复现 run、结果/主张/图表映射、P0/P1 风险和提交合规，`final_ready` 不等于获奖保证。
+- `scripts/contest_evidence_sync.py`：在 Contest QC 前同步 `deliverable_matrix.csv`、`result_registry.csv` 和 `figure_evidence.csv` 的待审核候选。可先运行 `--dry-run`；同步器不生成 `passed`、`checked` 或 `paper_ready`，冲突与 schema 异常必须先修复。
 - `scripts/model_skeleton_router.py`：题型路由后的模型骨架生成器，用于拿到题后尽快形成“题型→变量→目标/指标→约束/checker→验证资产”的可执行起点。
 - `scripts/domain_checker_template_builder.py`：领域 checker 模板库，用于把路由结果转成可执行 checker 起点；生成模板不等于正式约束验证，必须替换 TODO 后才可作为 model_ready 证据。
 - `references/automation-workflow.md`：闭环执行器规范；当用户说“继续优化技能/让它自动跑起来/做成项目闭环”时读取。
@@ -361,6 +363,7 @@ report/
 - [ ] 若任务是历史题复跑，最终输出必须优先说明技能诊断发现、已做技能补丁、下次流程如何改进；数值复跑结果只能作为证据或链路测试，不得喧宾夺主。
 - [ ] 若真实题测试只跑通轻量 baseline/placeholder 模型，必须明确区分“S0-S8 工程闭环完成”和“正式最优解完成”；不得把 `recommended_status=completed` 解释为国赛答案可提交。
 - [ ] 真实比赛/冲奖目标下，终稿前必须先运行 `contest_qc_gate.py --phase final`：任何真实附件 PoC、模型交接、数学核验、可复现 run、主张/图表证据、P0/P1 风险或当前官方规则/匿名/AI 披露缺口都不能被润色掩盖；只有 `final_ready` 才表示该证据层通过。
+- [ ] 自动同步产生的 `candidate` 只能作为待审核线索；不得仅因文件存在将其手工批量改为 `provided`、`checked` 或 `paper_ready`。
 - [ ] 真实比赛/冲奖目标下，最终必须运行 `competition_readiness_gate.py`；只有 `competition_ready=true` 才能称为达到可参赛评审口径，且仍不得承诺必然获奖。
 - [ ] 若用户纠正“任务目的/工作流/输出重心”，立即把纠正沉淀到本技能或相应 reference，而不是只在当前回复中道歉。
 - [ ] 当用户说“找一个真实竞赛题跑一轮端到端闭环”且上下文涉及数学建模智能体时，默认必须使用 `mathematical-modeling-agent` 的项目脚手架、S0-S8 状态机、Pipeline、质量门禁和提交包流程；不要误转到 `~/software-agent`，除非用户明确说软件智能体。

@@ -7,6 +7,7 @@
 - 标准建模项目脚手架与 S0-S8 状态机。
 - 优化、预测、评价、仿真、路径和统计题型路由。
 - 真实数据 PoC、运行记录、结果、图表和论文主张追溯。
+- 从项目产物非破坏性同步 Contest QC 待审核候选，减少比赛中手填台账。
 - 报告与结果表、图表、数值和单位一致性审计。
 - Contest QC 与 competition readiness 分层门禁。
 - manifest v2.0、SHA256 校验和原子化最终打包。
@@ -28,9 +29,13 @@ python 02_代码/08_pipeline.py --skeleton-only
 终稿阶段完成 QC 台账后运行完整流程：
 
 ```bash
+python 02_代码/18_contest_evidence_sync.py --dry-run
+python 02_代码/18_contest_evidence_sync.py
 python 02_代码/17_contest_qc.py --phase final --strict
 python 02_代码/08_pipeline.py --entry 02_代码/03_model_main.py --zip
 ```
+
+证据同步器只为小问、结果表和图表创建 `candidate` 行，并保留所有人工确认字段。文件存在不代表模型正确、结果有效、图表已审或达到 `paper_ready`；正式状态仍只能通过运行记录、数学核验和 Contest QC 人工/机器审查推进。
 
 完整流程只有在 `final_ready` 和 `competition_ready` 均通过后才发布 `07_提交包` 并推进到有效 S8。开放 P0/P1、模板内容、项目外证据、失败 manifest、文件缺失或 SHA256 不一致都会阻断交付。
 

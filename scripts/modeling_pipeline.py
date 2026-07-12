@@ -44,6 +44,7 @@ EVIDENCE_SCRIPT = SKILL_DIR / "scripts" / "competition_evidence_builder.py"
 SKELETON_SCRIPT = SKILL_DIR / "scripts" / "model_skeleton_router.py"
 DOMAIN_CHECKER_TEMPLATE_SCRIPT = SKILL_DIR / "scripts" / "domain_checker_template_builder.py"
 CONTEST_QC_SCRIPT = SKILL_DIR / "scripts" / "contest_qc_gate.py"
+CONTEST_EVIDENCE_SYNC_SCRIPT = SKILL_DIR / "scripts" / "contest_evidence_sync.py"
 
 
 @dataclass
@@ -139,6 +140,7 @@ def pipeline_step_names(skeleton_only: bool) -> list[str]:
         "report_assembly",
         "report_audit",
         "state_update_pre_finalize",
+        "contest_evidence_sync",
         "contest_qc",
         "competition_evidence",
         "repair_advisor",
@@ -181,6 +183,7 @@ def write_summary(project: Path, summary: dict) -> tuple[Path, Path]:
     coverage_counts = summary.get("coverage_counts") or {}
     interpretation_counts = summary.get("interpretation_counts") or {}
     assembly_counts = summary.get("assembly_counts") or {}
+    evidence_sync_counts = summary.get("evidence_sync_counts") or {}
     contest_qc_counts = summary.get("contest_qc_counts") or {}
     repair_counts = summary.get("repair_counts") or {}
     competition_counts = summary.get("competition_counts") or {}
@@ -194,6 +197,7 @@ def write_summary(project: Path, summary: dict) -> tuple[Path, Path]:
     lines.append(f"- 问题覆盖追踪：questions={coverage_counts.get('questions', 'NA')} missing={coverage_counts.get('missing_questions', 'NA')} weak_assets={coverage_counts.get('weak_asset_questions', 'NA')} warn={coverage_counts.get('warn', 'NA')} fail={coverage_counts.get('fail', 'NA')}\n")
     lines.append(f"- 结果解释草稿：questions={interpretation_counts.get('questions', 'NA')} without_tables={interpretation_counts.get('drafts_without_tables', 'NA')} warn={interpretation_counts.get('warn', 'NA')} fail={interpretation_counts.get('fail', 'NA')}\n")
     lines.append(f"- 报告骨架拼装：questions={assembly_counts.get('questions', 'NA')} ready={assembly_counts.get('ready_sections', 'NA')} partial={assembly_counts.get('partial_sections', 'NA')} weak={assembly_counts.get('weak_sections', 'NA')} warn={assembly_counts.get('warn', 'NA')} fail={assembly_counts.get('fail', 'NA')}\n")
+    lines.append(f"- 证据候选同步：status={summary.get('evidence_sync_status', 'NA')} discovered={evidence_sync_counts.get('discovered', 'NA')} added={evidence_sync_counts.get('added', 'NA')} updated={evidence_sync_counts.get('updated', 'NA')} conflicts={evidence_sync_counts.get('conflicts', 'NA')}\n")
     lines.append(f"- 竞赛质控：readiness={summary.get('contest_qc_readiness', 'NA')} pass={contest_qc_counts.get('pass', 'NA')} warn={contest_qc_counts.get('warn', 'NA')} fail={contest_qc_counts.get('fail', 'NA')}\n")
     lines.append(f"- 修复建议：delivery_readiness={summary.get('delivery_readiness', 'NA')} advice={repair_counts.get('advice_items', 'NA')} warn={repair_counts.get('warn', 'NA')} fail={repair_counts.get('fail', 'NA')}\n")
     lines.append(f"- 竞赛就绪度：readiness={summary.get('competition_readiness', 'NA')} workflow_fail={competition_counts.get('workflow', {}).get('fail', 'NA')} model_fail={competition_counts.get('model', {}).get('fail', 'NA')} competition_warn={competition_counts.get('competition', {}).get('warn', 'NA')} competition_fail={competition_counts.get('competition', {}).get('fail', 'NA')}\n")
@@ -242,6 +246,7 @@ def main() -> int:
     parser.add_argument("--skip-report-assembly", action="store_true", help="Skip evidence-first report section assembler")
     parser.add_argument("--strict-report-assembly", action="store_true", help="Fail if report assembly has warnings")
     parser.add_argument("--skip-contest-qc", action="store_true", help="Skip contest evidence/claim/compliance QC gate")
+    parser.add_argument("--skip-contest-evidence-sync", action="store_true", help="Skip review-only Contest QC evidence candidate synchronization")
     parser.add_argument("--strict-contest-qc", action="store_true", help="Fail unless the selected contest-QC phase is ready")
     parser.add_argument("--contest-qc-phase", choices=("early", "model", "final"), default="final", help="Contest-QC phase to evaluate")
     parser.add_argument("--report-title", default="数学建模报告", help="Title for assembled report draft")
@@ -308,6 +313,7 @@ def main() -> int:
         args.skip_interpretation = True
         args.skip_report_assembly = True
         args.skip_contest_qc = True
+        args.skip_contest_evidence_sync = True
         args.skip_repair_advisor = True
         args.skip_competition_evidence = True
         args.skip_competition_readiness = True
@@ -359,7 +365,28 @@ def main() -> int:
     # This state snapshot reflects the latest assembled and audited report.
     steps.append(run_command("state_update_pre_finalize", [py, str(STATE_SCRIPT), str(project)], project, timeout=args.timeout))
 
-    if args.skip_contest_qc:
+    if args.skip_contest_evidence_sync:
+        evidence_sync_step = skipped_step(
+            "contest_evidence_sync",
+            [py, str(CONTEST_EVIDENCE_SYNC_SCRIPT), str(project)],
+            "--skip-contest-evidence-sync",
+        )
+    else:
+        evidence_sync_step = run_command(
+            "contest_evidence_sync",
+            [py, str(CONTEST_EVIDENCE_SYNC_SCRIPT), str(project)],
+            project,
+            timeout=args.timeout,
+        )
+    steps.append(evidence_sync_step)
+
+    if not evidence_sync_step.skipped and evidence_sync_step.exit_code != 0:
+        steps.append(skipped_step(
+            "contest_qc",
+            [py, str(CONTEST_QC_SCRIPT), str(project)],
+            "contest evidence synchronization failed",
+        ))
+    elif args.skip_contest_qc:
         steps.append(skipped_step("contest_qc", [py, str(CONTEST_QC_SCRIPT), str(project)], "--skip-contest-qc"))
     else:
         cmd = [py, str(CONTEST_QC_SCRIPT), str(project), "--phase", args.contest_qc_phase]
@@ -375,6 +402,7 @@ def main() -> int:
     pre_coverage_summary = read_json(project / "06_过程记录" / "问题覆盖" / "problem_coverage.json")
     pre_interpretation_summary = read_json(project / "06_过程记录" / "结果解释" / "result_interpretation_draft.json")
     pre_assembly_summary = read_json(project / "06_过程记录" / "报告拼装" / "report_section_assembly.json")
+    pre_evidence_sync_summary = read_json(project / "06_过程记录" / "竞赛质控" / "evidence_sync.json")
     pre_contest_qc_summary = read_json(project / "06_过程记录" / "竞赛质控" / "contest_qc_gate.json")
     pre_meta = read_json(project / "project_meta.json")
     pre_finalize_checks: list[dict] = []
@@ -398,6 +426,8 @@ def main() -> int:
         "coverage_counts": {} if args.skip_coverage else (pre_coverage_summary.get("counts", {}) if isinstance(pre_coverage_summary, dict) else {}),
         "interpretation_counts": {} if args.skip_interpretation else (pre_interpretation_summary.get("counts", {}) if isinstance(pre_interpretation_summary, dict) else {}),
         "assembly_counts": {} if args.skip_report_assembly else (pre_assembly_summary.get("counts", {}) if isinstance(pre_assembly_summary, dict) else {}),
+        "evidence_sync_counts": {} if args.skip_contest_evidence_sync else (pre_evidence_sync_summary.get("counts", {}) if isinstance(pre_evidence_sync_summary, dict) else {}),
+        "evidence_sync_status": None if args.skip_contest_evidence_sync else (pre_evidence_sync_summary.get("status") if isinstance(pre_evidence_sync_summary, dict) else None),
         "contest_qc_counts": {} if args.skip_contest_qc else (pre_contest_qc_summary.get("counts", {}) if isinstance(pre_contest_qc_summary, dict) else {}),
         "contest_qc_readiness": None if args.skip_contest_qc else (pre_contest_qc_summary.get("readiness") if isinstance(pre_contest_qc_summary, dict) else None),
         "repair_counts": {},
@@ -484,6 +514,7 @@ def main() -> int:
     coverage_summary = read_json(project / "06_过程记录" / "问题覆盖" / "problem_coverage.json")
     interpretation_summary = read_json(project / "06_过程记录" / "结果解释" / "result_interpretation_draft.json")
     assembly_summary = read_json(project / "06_过程记录" / "报告拼装" / "report_section_assembly.json")
+    evidence_sync_summary = read_json(project / "06_过程记录" / "竞赛质控" / "evidence_sync.json")
     contest_qc_summary = read_json(project / "06_过程记录" / "竞赛质控" / "contest_qc_gate.json")
     repair_summary = read_json(project / "06_过程记录" / "修复建议" / "repair_advice.json")
     competition_summary = read_json(project / "06_过程记录" / "竞赛就绪度" / "competition_readiness.json")
@@ -496,6 +527,7 @@ def main() -> int:
     coverage_counts = {} if args.skip_coverage else (coverage_summary.get("counts", {}) if isinstance(coverage_summary, dict) else {})
     interpretation_counts = {} if args.skip_interpretation else (interpretation_summary.get("counts", {}) if isinstance(interpretation_summary, dict) else {})
     assembly_counts = {} if args.skip_report_assembly else (assembly_summary.get("counts", {}) if isinstance(assembly_summary, dict) else {})
+    evidence_sync_counts = {} if args.skip_contest_evidence_sync else (evidence_sync_summary.get("counts", {}) if isinstance(evidence_sync_summary, dict) else {})
     contest_qc_counts = {} if args.skip_contest_qc else (contest_qc_summary.get("counts", {}) if isinstance(contest_qc_summary, dict) else {})
     repair_counts = {} if args.skip_repair_advisor else (repair_summary.get("counts", {}) if isinstance(repair_summary, dict) else {})
     competition_counts = {} if args.skip_competition_readiness else (competition_summary.get("counts", {}) if isinstance(competition_summary, dict) else {})
@@ -524,6 +556,8 @@ def main() -> int:
         "coverage_counts": coverage_counts,
         "interpretation_counts": interpretation_counts,
         "assembly_counts": assembly_counts,
+        "evidence_sync_counts": evidence_sync_counts,
+        "evidence_sync_status": evidence_sync_summary.get("status") if isinstance(evidence_sync_summary, dict) else None,
         "contest_qc_counts": contest_qc_counts,
         "contest_qc_readiness": contest_qc_summary.get("readiness") if isinstance(contest_qc_summary, dict) else None,
         "repair_counts": repair_counts,

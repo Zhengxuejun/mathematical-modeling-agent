@@ -91,6 +91,8 @@ python 02_代码/10_result_interpretation.py
 python 02_代码/11_report_assembler.py
 python 02_代码/12_repair_advisor.py
 python 02_代码/14_competition_evidence.py
+python 02_代码/18_contest_evidence_sync.py --dry-run
+python 02_代码/18_contest_evidence_sync.py
 python 02_代码/17_contest_qc.py --phase final
 python 02_代码/13_competition_readiness.py
 python 02_代码/08_pipeline.py --zip
@@ -171,6 +173,7 @@ SCRIPT_TEMPLATES = {
     "15_model_skeleton.py": """from pathlib import Path\nimport subprocess\nimport sys\n\nBASE = Path(__file__).resolve().parents[1]\nSCRIPT = Path('__SKILL_SCRIPT_DIR__/model_skeleton_router.py')\nraise SystemExit(subprocess.call([sys.executable, str(SCRIPT), str(BASE)] + sys.argv[1:]))\n""",
     "16_domain_checker_templates.py": """from pathlib import Path\nimport subprocess\nimport sys\n\nBASE = Path(__file__).resolve().parents[1]\nSCRIPT = Path('__SKILL_SCRIPT_DIR__/domain_checker_template_builder.py')\nraise SystemExit(subprocess.call([sys.executable, str(SCRIPT), str(BASE)] + sys.argv[1:]))\n""",
     "17_contest_qc.py": """from pathlib import Path\nimport subprocess\nimport sys\n\nBASE = Path(__file__).resolve().parents[1]\nSCRIPT = Path('__SKILL_SCRIPT_DIR__/contest_qc_gate.py')\nraise SystemExit(subprocess.call([sys.executable, str(SCRIPT), str(BASE)] + sys.argv[1:]))\n""",
+    "18_contest_evidence_sync.py": """from pathlib import Path\nimport subprocess\nimport sys\n\nBASE = Path(__file__).resolve().parents[1]\nSCRIPT = Path('__SKILL_SCRIPT_DIR__/contest_evidence_sync.py')\nraise SystemExit(subprocess.call([sys.executable, str(SCRIPT), str(BASE)] + sys.argv[1:]))\n""",
 }
 
 REQ = """# Core scaffold uses only Python stdlib for data_audit/baseline/model_main/sensitivity.
@@ -224,6 +227,7 @@ def create_project(project_name: str, base: Path, force: bool = False) -> Path:
         "model_skeleton_router": "02_代码/15_model_skeleton.py",
         "domain_checker_template_builder": "02_代码/16_domain_checker_templates.py",
         "contest_qc_gate": "02_代码/17_contest_qc.py",
+        "contest_evidence_sync": "02_代码/18_contest_evidence_sync.py",
         "quality_gate_plus": "scripts/quality_gate_plus.py",
     }
     write_text(project_dir / "project_meta.json", json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", force=force)
