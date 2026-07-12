@@ -1,6 +1,6 @@
 # 数学建模智能体 v1.3.0
 
-- 当前源码发行版改用 Mozilla Public License 2.0；迁移前已按 MIT License 发布的版本保留其既有授权。
+- 当前源码发行版采用 Mozilla Public License 2.0。
 - 恢复版权所有者名称为 `Zhengxuejun`。
 
 - 支持项目脚手架、S0-S8、题型路由、领域 checker 模板、审计、提交包和竞赛就绪度。
