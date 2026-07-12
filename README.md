@@ -14,6 +14,34 @@
 - 有限深度 AIDE 式候选方案树，记录模型谱系、真实运行证据并确定性选优。
 - manifest v2.0、SHA256 校验和原子化最终打包。
 
+## 工作流总览
+
+```mermaid
+flowchart TD
+    A[创建项目与题目锁定] --> B[数据审计与题型路由]
+    B --> C[Baseline 与候选模型开发]
+    C --> D[候选方案树评估与选优]
+    D --> E[正式模型、Checker、敏感性与图表]
+    E --> F[报告拼装与一致性审计]
+    F --> G[证据同步与 Contest QC]
+    G --> H[Competition Evidence 与 Readiness]
+    H --> I{final_ready 且 competition_ready}
+    I -->|是| J[生成提交包并推进 S8]
+    I -->|否| K[按 Repair Advisor 修复]
+    K --> E
+```
+
+工作流分为三层：候选树负责保留和比较已经运行的模型实验；Pipeline 负责审计、证据、门禁和打包；Benchmark Harness 负责仓库能力回归，只有契约兼容时才作为候选评估器。三类状态不能混用：
+
+| 状态 | 表示什么 | 不表示什么 |
+|---|---|---|
+| `selected` | 当前候选树中最强的合格实验 | 模型已被证明正确或可以提交 |
+| `final_ready` | Contest QC 的证据、风险和合规门禁通过 | 已达到完整参赛评审口径 |
+| `competition_ready` | 工程、模型、验证和论文资产达到最低可信参赛标准 | 保证获奖 |
+| `S8 / completed` | 当前提交包和工程链路完整 | 数学结论必然正确 |
+
+完整比赛顺序、阶段产物、Pipeline 精确步骤和失败回路见 [docs/competition-workflow.md](docs/competition-workflow.md)。
+
 ## 快速开始
 
 ```bash
@@ -32,9 +60,13 @@ python 02_代码/08_pipeline.py --skeleton-only
 
 ```bash
 python 02_代码/18_contest_evidence_sync.py --dry-run
-python 02_代码/18_contest_evidence_sync.py
-python 02_代码/17_contest_qc.py --phase final --strict
-python 02_代码/08_pipeline.py --entry 02_代码/03_model_main.py --zip
+python 02_代码/08_pipeline.py \
+  --strict \
+  --strict-numbers \
+  --strict-contest-qc \
+  --strict-competition-readiness \
+  --entry 02_代码/03_model_main.py \
+  --zip
 ```
 
 证据同步器只为小问、结果表和图表创建 `candidate` 行，并保留所有人工确认字段。文件存在不代表模型正确、结果有效、图表已审或达到 `paper_ready`；正式状态仍只能通过运行记录、数学核验和 Contest QC 人工/机器审查推进。
@@ -81,7 +113,7 @@ python3 -m pytest -q
 
 当前版本：`1.2.0`。`competition_ready` 表示工程、证据与论文资产达到最低可信参赛边界，不代表数学模型必然正确，也不保证获奖。
 
-详细安装和工作流说明见 [INSTALL.md](INSTALL.md) 与 [SKILL.md](SKILL.md)。
+详细安装和工作流说明见 [INSTALL.md](INSTALL.md)、[docs/competition-workflow.md](docs/competition-workflow.md) 与 [SKILL.md](SKILL.md)。
 
 ## 协作
 

@@ -35,3 +35,46 @@ def test_readme_links_collaboration_policies() -> None:
     assert "[SECURITY.md](SECURITY.md)" in readme
     assert "Python 3.11" in readme
     assert "Python 3.13" in readme
+
+
+def test_readme_exposes_end_to_end_competition_workflow() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    workflow = (ROOT / "docs/competition-workflow.md").read_text(encoding="utf-8")
+    assert "```mermaid" in readme
+    assert "[docs/competition-workflow.md](docs/competition-workflow.md)" in readme
+    for status in ("selected", "final_ready", "competition_ready", "S8 / completed"):
+        assert status in readme
+        assert status in workflow
+    for step in (
+        "data_audit",
+        "model_skeleton",
+        "candidate_solution_tree",
+        "contest_evidence_sync",
+        "contest_qc",
+        "competition_readiness",
+        "finalize",
+    ):
+        assert step in workflow
+    assert "Pipeline 不会替团队自动完成这些模型脚本" in workflow
+    ordered_steps = (
+        "data_audit",
+        "model_skeleton",
+        "domain_checker_templates",
+        "quality_gate",
+        "quality_gate_plus",
+        "problem_coverage",
+        "result_interpretation",
+        "report_assembly",
+        "report_audit",
+        "state_update_pre_finalize",
+        "contest_evidence_sync",
+        "contest_qc",
+        "competition_evidence",
+        "repair_advisor",
+        "competition_readiness",
+        "finalize",
+        "state_update_final",
+    )
+    sequence = workflow.split("当前代码的实际执行顺序是：", 1)[1].split("```text", 1)[1].split("```", 1)[0]
+    documented_steps = [line.removeprefix("→ ").strip() for line in sequence.splitlines() if line.strip()]
+    assert documented_steps == list(ordered_steps)

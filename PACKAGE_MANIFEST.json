@@ -1,9 +1,9 @@
 {
   "name": "mathematical-modeling-agent",
   "version": "1.2.0",
-  "created_at": "2026-07-12T22:40:50",
+  "created_at": "2026-07-12T23:04:53",
   "distribution": "portable Hermes skill package",
-  "file_count": 157,
+  "file_count": 158,
   "excluded": [
     ".git",
     ".pytest_cache",
@@ -44,13 +44,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 5311,
-      "sha256": "c79dd18dc59f167a573e3f10bec4ee3d0ca5f02eef3f39937c727b285fc8fa19"
+      "bytes": 6779,
+      "sha256": "7e011810946e06c92e18efa6d07b7b436b92c03b9ec909af8f12138a75759bfe"
     },
     {
       "path": "RELEASE_NOTES.md",
-      "bytes": 2301,
-      "sha256": "009ba86d6432323ca2e966986535e905fb7c28070cbabe6057fad86dad376172"
+      "bytes": 2508,
+      "sha256": "f731713dde74ac2c7cecc9be5f78878e6894772fb8c490ec9fab5e0b6465e097"
     },
     {
       "path": "SECURITY.md",
@@ -283,6 +283,11 @@
       "sha256": "b5f2fd564ca2cdbf681ab47889ec874f96e7441eeee01dbf28bdea2dedcf324c"
     },
     {
+      "path": "docs/competition-workflow.md",
+      "bytes": 6810,
+      "sha256": "04bab149814fffb2d7ae8e48b4e824028ac4d2b441d38f2e3749b050db9401a9"
+    },
+    {
       "path": "docs/superpowers/plans/2026-07-12-candidate-solution-tree.md",
       "bytes": 3005,
       "sha256": "b549ffd5ba2dd868772c03acdd2fd99f4e544c51c6c3d517f0ee306e7b81c784"
@@ -414,8 +419,8 @@
     },
     {
       "path": "references/pipeline-runner.md",
-      "bytes": 5302,
-      "sha256": "5e54373140c960d559f3631f7e8ac1822a1e90ca8fd4874628c9cc4f157d76dc"
+      "bytes": 5311,
+      "sha256": "fcb299a2a5f63fbd2c48f2a0e585a0e02baf04a3652b1b59f109663b0c67f4f7"
     },
     {
       "path": "references/problem-coverage-tracker.md",
@@ -774,8 +779,8 @@
     },
     {
       "path": "scripts/tests/test_repository_collaboration_config.py",
-      "bytes": 1298,
-      "sha256": "e2d26f60f726c0e05b647f28cce357055d895521a6399d464df67b0274155eb3"
+      "bytes": 2901,
+      "sha256": "be09741dc272757eecf1cefe3ac417a0c3b873d69599ddc2e8fb036b06ca0096"
     },
     {
       "path": "scripts/tests/test_submission_package_contract.py",
