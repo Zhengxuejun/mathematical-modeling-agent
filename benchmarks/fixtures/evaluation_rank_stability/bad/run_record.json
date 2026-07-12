@@ -1,0 +1,1 @@
+{"command":"python rank.py","runtime_seconds":0.01,"exit_code":0,"input_hashes":{"input/data.csv":"2e327e3c18596e805c22454a733266c42c56d752d0e8e110fce9e532e85c9736"},"artifacts":{"artifacts/results.csv":"05a38190572d9de4b525523908dfc73b0f22c0fd489b7a54b2f860370943ecac"}}

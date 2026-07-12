@@ -1,0 +1,1 @@
+{"case_id":"optimization_capacity","model_name":"unchecked-optimizer","model_version":"1","random_seed":20260712,"metrics":{"objective":46},"outputs":{"decisions":{"A":0,"B":6}},"checks":{"capacity_feasible":false,"integer_decisions":true,"baseline_compared":true,"sensitivity_checked":true},"evidence":{"results":"artifacts/results.csv"}}

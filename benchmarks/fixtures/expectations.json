@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "fixtures": [
+    {"case_id": "evaluation_rank_stability", "fixture": "bad", "verdict": "blocked", "hard_blocks": ["directions_correct"], "score_min": 49.99, "score_max": 49.99},
+    {"case_id": "evaluation_rank_stability", "fixture": "good", "verdict": "strong", "hard_blocks": [], "score_min": 99, "score_max": 100},
+    {"case_id": "evaluation_rank_stability", "fixture": "partial", "verdict": "needs_work", "hard_blocks": [], "score_min": 70, "score_max": 84.99},
+    {"case_id": "optimization_capacity", "fixture": "bad", "verdict": "blocked", "hard_blocks": ["capacity_feasible"], "score_min": 49.99, "score_max": 49.99},
+    {"case_id": "optimization_capacity", "fixture": "good", "verdict": "strong", "hard_blocks": [], "score_min": 99, "score_max": 100},
+    {"case_id": "optimization_capacity", "fixture": "partial", "verdict": "needs_work", "hard_blocks": [], "score_min": 55, "score_max": 69.99},
+    {"case_id": "prediction_group_leakage", "fixture": "bad", "verdict": "blocked", "hard_blocks": ["no_target_leakage"], "score_min": 49.99, "score_max": 49.99},
+    {"case_id": "prediction_group_leakage", "fixture": "good", "verdict": "strong", "hard_blocks": [], "score_min": 99, "score_max": 100},
+    {"case_id": "prediction_group_leakage", "fixture": "partial", "verdict": "needs_work", "hard_blocks": [], "score_min": 55, "score_max": 69.99}
+  ]
+}

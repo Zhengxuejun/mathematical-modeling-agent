@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "case_id": "evaluation_rank_stability",
+  "category": "evaluation",
+  "difficulty": "micro",
+  "dimensions": {"correctness": 0.30, "feasibility": 0.20, "statistical_validity": 0.15, "reproducibility": 0.15, "evidence_consistency": 0.10, "efficiency": 0.10},
+  "required_files": ["solution.json", "run_record.json", "report.md"],
+  "input_files": [{"path": "input/data.csv", "sha256": "2e327e3c18596e805c22454a733266c42c56d752d0e8e110fce9e532e85c9736"}],
+  "rules": [
+    {"id": "ranking", "dimension": "correctness", "type": "ranking", "weight": 2, "source": "solution", "path": "outputs.ranking", "expected_path": "ranking"},
+    {"id": "top_choice", "dimension": "correctness", "type": "exact", "weight": 1, "source": "solution", "path": "outputs.top_choice", "expected_path": "top_choice"},
+    {"id": "directions_correct", "dimension": "feasibility", "type": "boolean", "weight": 1, "source": "solution", "path": "checks.directions_correct", "expected": true, "hard_block": "mathematical"},
+    {"id": "weights_sum", "dimension": "feasibility", "type": "numeric", "weight": 1, "source": "solution", "path": "checks.weight_sum", "expected": 1, "tolerance": 0.000001, "hard_block": "mathematical"},
+    {"id": "perturbation_stability", "dimension": "statistical_validity", "type": "boolean", "weight": 1, "source": "solution", "path": "checks.perturbation_stability", "expected": true},
+    {"id": "tie_handling", "dimension": "statistical_validity", "type": "boolean", "weight": 1, "source": "solution", "path": "checks.tie_handling", "expected": true},
+    {"id": "seed", "dimension": "reproducibility", "type": "exact", "weight": 1, "source": "solution", "path": "random_seed", "expected": 20260712},
+    {"id": "command", "dimension": "reproducibility", "type": "exact", "weight": 1, "source": "run_record", "path": "command", "expected": "python rank.py"},
+    {"id": "result_artifact", "dimension": "evidence_consistency", "type": "evidence", "weight": 1, "source": "solution", "path": "evidence.results"},
+    {"id": "report_claim", "dimension": "evidence_consistency", "type": "report_contains", "weight": 1, "source": "report", "path": "text", "expected": "recommendation=A"},
+    {"id": "runtime", "dimension": "efficiency", "type": "runtime", "weight": 1, "source": "run_record", "path": "runtime_seconds", "maximum": 2}
+  ]
+}

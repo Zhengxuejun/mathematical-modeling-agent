@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "case_id": "optimization_capacity",
+  "category": "optimization",
+  "difficulty": "micro",
+  "dimensions": {"correctness": 0.30, "feasibility": 0.20, "statistical_validity": 0.15, "reproducibility": 0.15, "evidence_consistency": 0.10, "efficiency": 0.10},
+  "required_files": ["solution.json", "run_record.json", "report.md"],
+  "input_files": [{"path": "input/data.csv", "sha256": "0b9e9b5ee7b0dd5136f85972ac4288a8383e6e9a05ccf64cf3061b9e302e6665"}],
+  "rules": [
+    {"id": "objective", "dimension": "correctness", "type": "numeric", "weight": 2, "source": "solution", "path": "metrics.objective", "expected_path": "optimal_objective", "tolerance": 0, "partial_tolerance": 5},
+    {"id": "decisions", "dimension": "correctness", "type": "exact", "weight": 1, "source": "solution", "path": "outputs.decisions", "expected_path": "decisions"},
+    {"id": "capacity_feasible", "dimension": "feasibility", "type": "boolean", "weight": 2, "source": "solution", "path": "checks.capacity_feasible", "expected": true, "hard_block": "mathematical"},
+    {"id": "integer_decisions", "dimension": "feasibility", "type": "boolean", "weight": 1, "source": "solution", "path": "checks.integer_decisions", "expected": true, "hard_block": "mathematical"},
+    {"id": "baseline_compared", "dimension": "statistical_validity", "type": "boolean", "weight": 1, "source": "solution", "path": "checks.baseline_compared", "expected": true},
+    {"id": "sensitivity_checked", "dimension": "statistical_validity", "type": "boolean", "weight": 1, "source": "solution", "path": "checks.sensitivity_checked", "expected": true},
+    {"id": "seed", "dimension": "reproducibility", "type": "exact", "weight": 1, "source": "solution", "path": "random_seed", "expected": 20260712},
+    {"id": "command", "dimension": "reproducibility", "type": "exact", "weight": 1, "source": "run_record", "path": "command", "expected": "python solve.py"},
+    {"id": "result_artifact", "dimension": "evidence_consistency", "type": "evidence", "weight": 1, "source": "solution", "path": "evidence.results"},
+    {"id": "report_claim", "dimension": "evidence_consistency", "type": "report_contains", "weight": 1, "source": "report", "path": "text", "expected": "objective=46"},
+    {"id": "runtime", "dimension": "efficiency", "type": "runtime", "weight": 1, "source": "run_record", "path": "runtime_seconds", "maximum": 2}
+  ]
+}

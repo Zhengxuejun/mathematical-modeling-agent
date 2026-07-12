@@ -1,0 +1,1 @@
+{"case_id":"evaluation_rank_stability","model_name":"base-ranking","model_version":"1","random_seed":20260712,"metrics":{"stability_rate":0.0},"outputs":{"ranking":["A","B","C"],"top_choice":"A"},"checks":{"directions_correct":true,"weight_sum":1.0,"perturbation_stability":false,"tie_handling":false},"evidence":{"results":"artifacts/missing.csv"}}

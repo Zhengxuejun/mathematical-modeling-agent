@@ -1,0 +1,1 @@
+{"case_id":"prediction_group_leakage","model_name":"row-random-regression","model_version":"1","random_seed":20260712,"metrics":{"rmse":0.05},"outputs":{"prediction_signature":"leaked-score","split_method":"row-random"},"checks":{"predictions_complete":true,"no_target_leakage":false,"fold_variability_reported":true},"evidence":{"results":"artifacts/results.csv"}}
