@@ -43,4 +43,3 @@ def write_result(result: BenchmarkResult, output_dir: Path) -> tuple[Path, Path]
     json_path.write_text(result_json(result), encoding="utf-8")
     markdown_path.write_text(result_markdown(result), encoding="utf-8")
     return json_path, markdown_path
-

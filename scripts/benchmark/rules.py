@@ -69,4 +69,3 @@ def evaluate_rule(rule: dict[str, Any], case: CaseContract, submission: Submissi
         message = "required value or evidence is missing or invalid"
     hard_block = rule.get("hard_block") if score == 0 else None
     return RuleResult(rule["id"], rule["dimension"], "pass" if score == 1 else ("partial" if score > 0 else "fail"), score, float(rule["weight"]), message, hard_block)
-

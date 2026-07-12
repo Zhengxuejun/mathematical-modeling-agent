@@ -1,7 +1,7 @@
 {
   "name": "mathematical-modeling-agent",
   "version": "1.2.0",
-  "created_at": "2026-07-12T22:00:06",
+  "created_at": "2026-07-12T22:01:43",
   "distribution": "portable Hermes skill package",
   "file_count": 146,
   "excluded": [
@@ -534,8 +534,8 @@
     },
     {
       "path": "scripts/benchmark/__init__.py",
-      "bytes": 77,
-      "sha256": "5663e03907a28b541e68f334a2b9c4ed493aa40822254d400f4b9c8a8f812585"
+      "bytes": 76,
+      "sha256": "9b58f87cd1ea402ac3552ac7adf06c3741a14d0f395adc9720fe11b038b6c016"
     },
     {
       "path": "scripts/benchmark/contracts.py",
@@ -549,18 +549,18 @@
     },
     {
       "path": "scripts/benchmark/paths.py",
-      "bytes": 1410,
-      "sha256": "2109f0b9f528f56e24b107c4440563522e362ccdb321d78f6e7ea715e70a5841"
+      "bytes": 1409,
+      "sha256": "ecac5052c564053d23e4f082ce831ecaeb66ebd66d7b0da0eb12705ee08573bb"
     },
     {
       "path": "scripts/benchmark/reporting.py",
-      "bytes": 1847,
-      "sha256": "42d2110f244109f9d1904791563b99680cace4247b312db5bdf1e5c95dd5f8e0"
+      "bytes": 1846,
+      "sha256": "1ea0cddc1e173e071d46fe6ee5f6cec0321ab5fa2c68e6f626c36bb17ce12edf"
     },
     {
       "path": "scripts/benchmark/rules.py",
-      "bytes": 3193,
-      "sha256": "cb98f0cabb72e52eeff0159c95a1313dcadf371558724cf92a63227077305663"
+      "bytes": 3192,
+      "sha256": "054d61648b0eb3676dc2a7b87d71a87489f0b3f882bc501e420d0877887a84f8"
     },
     {
       "path": "scripts/benchmark/suite.py",
