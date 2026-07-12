@@ -75,6 +75,7 @@ metadata:
 - `references/report-section-assembler.md`：证据优先报告拼装器说明，规定如何把逐问解释草稿、表格、图表和风险提示拼成可编辑 Markdown 报告骨架。
 - `references/repair-advisor.md`：修复建议器说明，规定如何把各类审计结果汇总成优先级修复清单和交付 readiness 判断。
 - `references/continuous-optimization-notes.md`：数学建模智能体持续优化记录，沉淀闭环执行、自动审计、文件卫生和下一阶段状态机自动推进器设计。
+- `references/candidate-solution-tree.md`：AIDE 式有限候选实验树，规定父子改进、运行证据、输入快照、Benchmark 可比性、确定性选优和 readiness 隔离。
 - `references/session-continuous-optimization-20260522.md`：本轮连续优化会话沉淀，记录从脚手架到 Pipeline/quality_gate_plus 的工程闭环升级模式、验证纪律和下一步 problem_coverage_tracker 方向。
 - `references/session-problem-coverage-tracker-20260522.md`：问题小问覆盖追踪器实现沉淀，记录逐问抽取、覆盖判定、Pipeline 集成、正负例验证和下一步 result_interpretation_helper 方向。
 - `references/session-result-interpretation-helper-20260522.md`：结果解释生成器实现沉淀，记录 problem_coverage 与 result_interpretation 的 Pipeline 集成、验证纪律和下一步 report_section_assembler 方向。
@@ -319,6 +320,7 @@ report/
 - `scripts/contest_qc_gate.py`：竞赛质控门禁。新项目先用 `--init --phase early` 建立登记表；主模型、真实附件 PoC 和正式运行完成后用 `--phase model`；终稿前用 `--phase final`。它验证真实数据 PoC、模型交接、数学检查、可复现 run、结果/主张/图表映射、P0/P1 风险和提交合规，`final_ready` 不等于获奖保证。
 - `scripts/contest_evidence_sync.py`：在 Contest QC 前同步 `deliverable_matrix.csv`、`result_registry.csv` 和 `figure_evidence.csv` 的待审核候选。可先运行 `--dry-run`；同步器不生成 `passed`、`checked` 或 `paper_ready`，冲突与 schema 异常必须先修复。
 - `scripts/modeling_benchmark.py`：离线确定性能力基准。用 `validate` 校验案例契约、`run` 评分一个显式提交目录、`suite` 检查仓库内置优化/预测/评价 fixtures；基准分数不得自动写入或提升 `competition_ready`。
+- `scripts/candidate_solution_tree.py`：有限深度候选方案树。登记 baseline/改进分支，读取已运行 submission 的输入与证据哈希、可行性、验证分数、目标值和可选 Benchmark，确定性选择最强合格节点；绝不执行候选命令或自动提升 readiness。
 - `scripts/model_skeleton_router.py`：题型路由后的模型骨架生成器，用于拿到题后尽快形成“题型→变量→目标/指标→约束/checker→验证资产”的可执行起点。
 - `scripts/domain_checker_template_builder.py`：领域 checker 模板库，用于把路由结果转成可执行 checker 起点；生成模板不等于正式约束验证，必须替换 TODO 后才可作为 model_ready 证据。
 - `references/automation-workflow.md`：闭环执行器规范；当用户说“继续优化技能/让它自动跑起来/做成项目闭环”时读取。
@@ -366,6 +368,7 @@ report/
 - [ ] 真实比赛/冲奖目标下，终稿前必须先运行 `contest_qc_gate.py --phase final`：任何真实附件 PoC、模型交接、数学核验、可复现 run、主张/图表证据、P0/P1 风险或当前官方规则/匿名/AI 披露缺口都不能被润色掩盖；只有 `final_ready` 才表示该证据层通过。
 - [ ] 自动同步产生的 `candidate` 只能作为待审核线索；不得仅因文件存在将其手工批量改为 `provided`、`checked` 或 `paper_ready`。
 - [ ] Benchmark 的 `strong` 只表示合成案例契约下的回归结果；不得将其表述为正式题模型正确、项目可提交或获奖概率。
+- [ ] 候选树的 `selected` 只表示同输入、同评估口径下的局部选优；仍需题目特定 checker、敏感性/鲁棒性、Contest QC 和 `competition_readiness_gate.py`。
 - [ ] 真实比赛/冲奖目标下，最终必须运行 `competition_readiness_gate.py`；只有 `competition_ready=true` 才能称为达到可参赛评审口径，且仍不得承诺必然获奖。
 - [ ] 若用户纠正“任务目的/工作流/输出重心”，立即把纠正沉淀到本技能或相应 reference，而不是只在当前回复中道歉。
 - [ ] 当用户说“找一个真实竞赛题跑一轮端到端闭环”且上下文涉及数学建模智能体时，默认必须使用 `mathematical-modeling-agent` 的项目脚手架、S0-S8 状态机、Pipeline、质量门禁和提交包流程；不要误转到 `~/software-agent`，除非用户明确说软件智能体。

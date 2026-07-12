@@ -14,3 +14,7 @@ labels over time; anyone copying upstream material must review the upstream
 terms directly. The MIT License in this repository applies only to the content
 distributed in this repository.
 
+The phrase "AIDE-style candidate solution tree" describes the general pattern
+of retaining and evaluating parent-child solution experiments. The candidate
+tree in this repository is independently implemented and does not redistribute
+AIDE source code, prompts, datasets, model outputs, or execution components.

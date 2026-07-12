@@ -13,3 +13,5 @@
 - 完整 Pipeline 在报告审计后、Contest QC 前自动同步候选；schema、事务或重复身份冲突会阻断旧 QC 结果继续打包。
 - 新增完全离线、确定性的 Modeling Benchmark Harness：使用三个原创合成案例和九个 fixture 检查优化可行性、分组预测泄漏、评价排序稳定性、复现记录与证据一致性。
 - Benchmark 提供 `run`、`validate`、`suite` 三个命令，输出稳定 JSON/Markdown；它不调用 LLM，不使用网络，也不会自动改变 `competition_ready`。
+- 新增 `candidate_solution_tree.py`：以有限节点/深度记录 baseline 和父子改进分支，验证输入与证据哈希、运行、可行性和验证结果，并支持同 case Benchmark 下的确定性选优。
+- 候选树不执行记录命令；不同输入快照或不同 Benchmark case 拒绝比较，`selected` 不会写入 Contest QC、S0-S8、提交包或 `competition_ready`。

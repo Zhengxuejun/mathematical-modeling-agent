@@ -476,3 +476,21 @@ benchmarks/fixtures/
 基准按 correctness、feasibility、statistical_validity、reproducibility、evidence_consistency、efficiency 六维评分。契约/输入哈希/运行记录不可信时 fail-closed 为 `invalid`；不可行决策或明确泄漏触发硬阻断，最高只能为 `blocked`。报告输出为确定性 JSON/Markdown，必需流程不访问网络、不执行提交代码、不调用 LLM。
 
 安全边界：Benchmark 是仓库能力回归信号，不是正式竞赛评分器或获奖预测器，不接入 `competition_readiness_gate.py`，也不得自动提升任何项目的 `competition_ready`。后续扩展应优先增加许可清晰、失败模式明确的案例，并保持数据驱动规则；不要引入任意 case 插件执行。
+
+## 20. 当前已实现：AIDE 式候选方案树 v1
+
+已实现：
+
+```text
+scripts/candidate_solution_tree.py
+scripts/candidate_tree/
+references/candidate-solution-tree.md
+02_代码/19_candidate_solution_tree.py
+08_候选方案/
+```
+
+目标：把比赛中的模型探索从“反复覆盖同一份代码”升级为可复盘的有限实验树。节点记录 baseline 或父节点、改进假设、submission 路径、输入快照、运行状态、可行性、验证分数、目标值、证据哈希与可选 Benchmark 结果；失败节点保留为 `blocked`，不丢失失败分支信息。
+
+选优先执行硬门禁，再按同 case Benchmark、验证分数、目标方向、证据数量、运行时间和稳定 ID 做确定性排序。所有合格候选必须使用相同输入路径/哈希集合；Benchmark 覆盖必须全无或使用同一个 case hash，避免不可比实验被静默混排。
+
+安全边界：工具不执行 `run_record` 命令，不生成模型代码，不调用 LLM，不进行无限搜索。`selected` 只是当前有限树中的最佳合格实验，不更新 `paper_ready`、`final_ready`、`competition_ready`、S0-S8 或提交包。后续可扩展候选生成调度器，但必须保留节点上限、深度上限、人工可审查假设和现有门禁。

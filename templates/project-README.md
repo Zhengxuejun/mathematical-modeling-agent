@@ -21,6 +21,7 @@
 05_报告定稿/         # DOCX/PDF/LaTeX/Markdown
 06_过程记录/         # 草稿、实验日志、截图
 07_提交包/           # 最终提交文件
+08_候选方案/         # 候选模型、运行记录和改进分支
 ```
 
 ## 3. 子任务 DAG
@@ -71,6 +72,7 @@ python 02_代码/02_baseline.py
 python 02_代码/03_model_main.py
 python 02_代码/04_sensitivity.py
 python 02_代码/05_make_figures.py
+python 02_代码/19_candidate_solution_tree.py init --objective-metric objective --direction maximize
 ```
 
 ## 6. 关键结果
