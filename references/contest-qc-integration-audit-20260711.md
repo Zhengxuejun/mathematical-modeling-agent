@@ -33,6 +33,7 @@ The integration now enforces these deterministic checks:
 - Open P0/P1 review findings, failed/blocked mathematical checks, open high-risk consistency rows, unsupported paper claims, or missing current rule/anonymity/reproducibility/AI-disclosure state block `final_ready`.
 - `competition_readiness_gate.as_bool()` treats an explicit false/template/warn status as authoritative; non-empty paths or metadata cannot upgrade it to pass.
 - `--freeze-run` hashes a completed run's declared entry, inputs, result tables, and figures without executing its command. Final QC fails closed when the manifest is absent, malformed, stale, or inconsistent with paper-ready result/figure linkage.
+- Paper-ready result, figure, and claim IDs must be non-empty and unique within their registry; claim evidence resolves through the declared `result` or `figure` namespace instead of an untyped union.
 
 ## Remaining boundary
 

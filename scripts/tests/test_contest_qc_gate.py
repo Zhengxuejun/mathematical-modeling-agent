@@ -195,6 +195,89 @@ def test_final_gate_requires_evidence_and_blocks_open_p1(tmp_path: Path) -> None
     assert any(check["id"] == "judge_risk" and check["status"] == "fail" for check in blocked["checks"])
 
 
+@pytest.mark.parametrize(
+    ("mutation", "issue_marker"),
+    [
+        ("empty_result_id", "result_id:empty=1"),
+        ("duplicate_result_id", "result_id:duplicate=RSLT1"),
+        ("unqualified_result", "result_id:unqualified=1"),
+        ("empty_figure_id", "figure_id:empty=1"),
+        ("duplicate_figure_id", "figure_id:duplicate=F1"),
+        ("unqualified_figure", "figure_id:unqualified=1"),
+        ("empty_claim_id", "claim_id:empty=1"),
+        ("duplicate_claim_id", "claim_id:duplicate=C1"),
+        ("evidence_type_mismatch", "C1:unknown_figure:RSLT1"),
+    ],
+)
+def test_final_gate_rejects_invalid_paper_evidence_identities(
+    tmp_path: Path, mutation: str, issue_marker: str,
+) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    make_final_ready_fixture(project)
+    qc = project / QC_REL
+    results = read_rows(qc / "result_registry.csv")
+    figures = read_rows(qc / "figure_evidence.csv")
+    claims = read_rows(qc / "claim_ledger.csv")
+
+    if mutation == "empty_result_id":
+        results.append({**results[0], "result_id": "", "scenario_id": "empty"})
+    elif mutation == "duplicate_result_id":
+        results.append({**results[0], "scenario_id": "stress", "value": "2"})
+    elif mutation == "unqualified_result":
+        results.append({
+            **results[0],
+            "result_id": "BROKEN-R",
+            "run_id": "MISSING",
+            "source_table": "03_结果表格/missing.csv",
+        })
+    elif mutation == "empty_figure_id":
+        figures.append({**figures[0], "figure_id": "", "caption": "空身份图"})
+    elif mutation == "duplicate_figure_id":
+        figures.append({**figures[0], "caption": "重复身份图"})
+    elif mutation == "unqualified_figure":
+        figures.append({
+            **figures[0],
+            "figure_id": "BROKEN-F",
+            "run_id": "MISSING",
+            "figure_path": "04_图表/missing.png",
+        })
+    elif mutation == "empty_claim_id":
+        claims[0]["claim_id"] = ""
+    elif mutation == "duplicate_claim_id":
+        claims.append({**claims[0], "claim_text": "重复身份主张"})
+    else:
+        claims[0]["evidence_type"] = "figure"
+
+    write_rows(qc / "result_registry.csv", results)
+    write_rows(qc / "figure_evidence.csv", figures)
+    write_rows(qc / "claim_ledger.csv", claims)
+
+    summary = evaluate(project, "final")
+
+    assert summary["readiness"] == "blocked"
+    evidence = next(check for check in summary["checks"] if check["id"] == "paper_claim_evidence")
+    assert evidence["status"] == "fail"
+    assert issue_marker in evidence["evidence"]
+
+
+def test_final_gate_accepts_typed_figure_evidence_identity(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    make_final_ready_fixture(project)
+    qc = project / QC_REL
+    claims = read_rows(qc / "claim_ledger.csv")
+    claims[0]["evidence_id"] = "F1"
+    claims[0]["evidence_type"] = "figure"
+    write_rows(qc / "claim_ledger.csv", claims)
+
+    summary = evaluate(project, "final")
+
+    assert summary["readiness"] == "final_ready"
+    evidence = next(check for check in summary["checks"] if check["id"] == "paper_claim_evidence")
+    assert evidence["status"] == "pass"
+
+
 def test_final_gate_fails_closed_until_supporting_run_is_frozen(tmp_path: Path) -> None:
     project = tmp_path / "project"
     project.mkdir()

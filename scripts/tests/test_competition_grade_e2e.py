@@ -15,7 +15,7 @@ for directory in (SCRIPT_DIR, TEST_DIR):
 from finalize_modeling_project import DEFAULT_DIRS
 from contest_qc_gate import freeze_run_artifacts
 from submission_package_contract import validate_submission_package
-from test_contest_qc_gate import make_final_ready_fixture, write_rows
+from test_contest_qc_gate import make_final_ready_fixture, read_rows, write_rows
 from update_project_state import infer_states
 
 
@@ -184,6 +184,37 @@ def test_frozen_artifact_drift_blocks_competition_readiness_and_finalizer(tmp_pa
     finalize = next(step for step in summary["steps"] if step["name"] == "finalize")
     assert finalize["skipped"]
     assert not (project / "07_提交包/submission_manifest.json").exists()
+
+
+def test_invalid_paper_evidence_identity_blocks_finalizer(tmp_path: Path) -> None:
+    project = make_competition_project(tmp_path)
+    qc = project / "06_过程记录/竞赛质控"
+    results = read_rows(qc / "result_registry.csv")
+    claims = read_rows(qc / "claim_ledger.csv")
+    results[0]["result_id"] = ""
+    claims[0]["evidence_id"] = ""
+    write_rows(qc / "result_registry.csv", results)
+    write_rows(qc / "claim_ledger.csv", claims)
+    command = [
+        sys.executable,
+        str(SCRIPT_DIR / "modeling_pipeline.py"),
+        str(project),
+        "--entry",
+        "02_代码/solve.py",
+        "--report",
+        "05_报告定稿/report_draft.md",
+    ]
+
+    result = subprocess.run(command, text=True, capture_output=True, timeout=60)
+
+    assert result.returncode == 1
+    assert not (project / "07_提交包/submission_manifest.json").exists()
+    summary = json.loads((project / "06_过程记录/pipeline/pipeline_run_summary.json").read_text(encoding="utf-8"))
+    assert summary["contest_qc_readiness"] == "blocked"
+    assert summary["competition_ready"] is False
+    finalize = next(step for step in summary["steps"] if step["name"] == "finalize")
+    assert finalize["skipped"]
+    assert "contest QC is not final_ready" in finalize["reason"]
 
 
 def test_previous_s8_does_not_make_blocked_rerun_completed(tmp_path: Path) -> None:
