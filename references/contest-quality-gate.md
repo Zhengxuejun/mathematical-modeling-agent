@@ -25,7 +25,8 @@ python 02_代码/17_contest_qc.py --phase early --strict
 python 02_代码/17_contest_qc.py --phase model --strict
 
 # 终稿前证据、评委风险、匿名与复现门禁
-python 02_代码/17_contest_qc.py --phase final --strict
+# 将 R1 替换为支撑论文结果/图表的 completed run_id
+python 02_代码/17_contest_qc.py --freeze-run R1 --phase final --strict
 
 # 从现有小问、结果表和图表预填待审核候选
 python 02_代码/18_contest_evidence_sync.py --dry-run
@@ -66,6 +67,7 @@ final_ready   当前提交级证据通过；不代表必然获奖
 - `poc_registry.csv`：主路线/基线必须有可追溯到真实附件的 passed PoC。synthetic/mock 只能是 diagnostic-only。
 - `math_verification.csv`：量纲、边界、守恒、约束、公式回代、可行性措辞等硬检查。
 - `run_record.csv` 与 `result_registry.csv`：把数值与可复现命令、输入、参数、seed、源表绑定；`result_registry.csv.deliverable_id` 必须映射到题目交付物。
+- `artifact_manifest.csv`：由 `--freeze-run` 原子写入 completed run 声明的入口、输入、结果表和图表 SHA256/字节数。final 门禁只信任清单中仍与当前文件一致、且结果/图表确属该 run 声明输出的 paper-ready 证据。
 - `claim_ledger.csv` 与 `figure_evidence.csv`：摘要/结论/主图必须映射到 `paper_ready` 证据；主图还要有 run、caption、图后结论以及 render 或人工可读性检查，`figure_evidence.csv.deliverable_id` 使每个交付物可追溯。
 - `review_findings.csv`：P0/P1/P2/P3 评委风险。终稿前不允许开放 P0/P1。
 - `review_pass_items.csv`：终稿至少五项可定位的通过证据，避免只写“已检查”。
@@ -81,6 +83,8 @@ final_ready   当前提交级证据通过；不代表必然获奖
 - `competition_readiness_gate`：把 workflow/model/competition 分层，给出是否达到可参赛评审口径的综合判断。
 
 四者互补：`final_ready` 不是 `competition_ready` 的替代；后者仍会因 placeholder、未实现领域 checker、模型结果不足等原因拦截项目。
+
+`--freeze-run` 要求 completed run 有非空 `command` 和明确 `input_files`；确实没有外部输入时填写 `not_applicable`。它不执行记录命令，也不把 `candidate`、`computed` 或 `checked` 自动提升为 `paper_ready`。多文件模型中，`result_registry.source_script` 若不是 run 的 `entry_script`，必须列入该 run 的 `input_files`，确保同样被冻结。绝对路径、`..`、项目外 symlink、缺失文件、非 completed 或重复 run_id 会在写盘前被拒绝；并发冻结用文件锁保护完整读改写事务。冻结后若代码、输入或输出变化，必须重跑、重审并重新冻结；门禁本身不会自动刷新哈希。
 
 同步报告写入 `06_过程记录/竞赛质控/evidence_sync.json` 与 `evidence_sync.md`。重复运行保持幂等；坏表头、重复身份或事务异常返回非零，Pipeline 会跳过 Contest QC，避免沿用旧门禁结果。同步生成的 `candidate` 不计入 `computed`、`checked` 或 `paper_ready` 证据。
 

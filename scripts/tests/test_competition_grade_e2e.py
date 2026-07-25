@@ -13,6 +13,7 @@ for directory in (SCRIPT_DIR, TEST_DIR):
         sys.path.insert(0, str(directory))
 
 from finalize_modeling_project import DEFAULT_DIRS
+from contest_qc_gate import freeze_run_artifacts
 from submission_package_contract import validate_submission_package
 from test_contest_qc_gate import make_final_ready_fixture, write_rows
 from update_project_state import infer_states
@@ -81,6 +82,7 @@ The minimum-cost feasible plan has objective 1.0; stress testing preserves feasi
         }),
         encoding="utf-8",
     )
+    freeze_run_artifacts(project, "R1")
     return project
 
 
@@ -156,6 +158,32 @@ def test_open_p1_risk_blocks_finalizer_and_new_manifest(tmp_path: Path) -> None:
     finalize = next(step for step in summary["steps"] if step["name"] == "finalize")
     assert finalize["skipped"]
     assert "contest QC is not final_ready" in finalize["reason"]
+
+
+def test_frozen_artifact_drift_blocks_competition_readiness_and_finalizer(tmp_path: Path) -> None:
+    project = make_competition_project(tmp_path)
+    (project / "03_结果表格/result.csv").write_text(
+        "metric,value\nobjective,999\n", encoding="utf-8",
+    )
+    command = [
+        sys.executable,
+        str(SCRIPT_DIR / "modeling_pipeline.py"),
+        str(project),
+        "--entry",
+        "02_代码/solve.py",
+        "--report",
+        "05_报告定稿/report_draft.md",
+    ]
+
+    result = subprocess.run(command, text=True, capture_output=True, timeout=60)
+
+    assert result.returncode == 1
+    summary = json.loads((project / "06_过程记录/pipeline/pipeline_run_summary.json").read_text(encoding="utf-8"))
+    assert summary["contest_qc_readiness"] == "blocked"
+    assert summary["competition_ready"] is False
+    finalize = next(step for step in summary["steps"] if step["name"] == "finalize")
+    assert finalize["skipped"]
+    assert not (project / "07_提交包/submission_manifest.json").exists()
 
 
 def test_previous_s8_does_not_make_blocked_rerun_completed(tmp_path: Path) -> None:

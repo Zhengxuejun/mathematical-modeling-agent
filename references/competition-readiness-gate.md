@@ -20,10 +20,10 @@ python 02_代码/13_competition_readiness.py
 终稿前先运行质控账本门禁：
 
 ```bash
-python 02_代码/17_contest_qc.py --phase final --strict
+python 02_代码/17_contest_qc.py --freeze-run R1 --phase final --strict
 ```
 
-`contest_qc_gate.json` 是交付物、真实数据 PoC、模型交接、数学核验、run/result/claim/figure 证据、P0/P1 风险与合规的真相源；`competition_evidence.json` 仍是自动发现/提示层，不能覆盖明确的 QC 阻塞。
+将 `R1` 替换为支撑论文证据的正式 run_id；多个 run 逐个冻结后再运行 final 门禁。`contest_qc_gate.json` 是交付物、真实数据 PoC、模型交接、数学核验、run/artifact/result/claim/figure 证据、P0/P1 风险与合规的真相源；`competition_evidence.json` 仍是自动发现/提示层，不能覆盖明确的 QC 阻塞。
 
 ## 输出
 
@@ -58,7 +58,7 @@ python 02_代码/17_contest_qc.py --phase final --strict
 证明达到可参赛评审口径：
 
 - 小问逐问覆盖；
-- `contest_qc_gate.py --phase final` 为 `final_ready`，不存在开放 P0/P1、主张/图表证据断链或提交合规缺口；
+- `contest_qc_gate.py --phase final` 为 `final_ready`，不存在未冻结/漂移产物、开放 P0/P1、主张/图表证据断链或提交合规缺口；
 - baseline 或模型对比；
 - 敏感性/鲁棒性/误差检验；
 - 不确定性、风险或情景分析；

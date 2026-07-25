@@ -7,6 +7,7 @@
 - 标准建模项目脚手架与 S0-S8 状态机。
 - 优化、预测、评价、仿真、路径和统计题型路由。
 - 真实数据 PoC、运行记录、结果、图表和论文主张追溯。
+- 正式 run 的入口、输入、结果表和图表可显式冻结 SHA256；终稿门禁阻断缺失、替换或内容漂移。
 - 从项目产物非破坏性同步 Contest QC 待审核候选，减少比赛中手填台账。
 - 报告与结果表、图表、数值和单位一致性审计。
 - Contest QC 与 competition readiness 分层门禁。
@@ -22,13 +23,14 @@ flowchart TD
     B --> C[Baseline 与候选模型开发]
     C --> D[候选方案树评估与选优]
     D --> E[正式模型、Checker、敏感性与图表]
-    E --> F[报告拼装与一致性审计]
-    F --> G[证据同步与 Contest QC]
-    G --> H[Competition Evidence 与 Readiness]
-    H --> I{final_ready 且 competition_ready}
-    I -->|是| J[生成提交包并推进 S8]
-    I -->|否| K[按 Repair Advisor 修复]
-    K --> E
+    E --> F[冻结正式 Run 产物]
+    F --> G[报告拼装与一致性审计]
+    G --> H[证据同步与 Contest QC]
+    H --> I[Competition Evidence 与 Readiness]
+    I --> J{final_ready 且 competition_ready}
+    J -->|是| K[生成提交包并推进 S8]
+    J -->|否| L[按 Repair Advisor 修复]
+    L --> E
 ```
 
 工作流分为三层：候选树负责保留和比较已经运行的模型实验；Pipeline 负责审计、证据、门禁和打包；Benchmark Harness 负责仓库能力回归，只有契约兼容时才作为候选评估器。三类状态不能混用：
@@ -60,6 +62,7 @@ python 02_代码/08_pipeline.py --skeleton-only
 
 ```bash
 python 02_代码/18_contest_evidence_sync.py --dry-run
+python 02_代码/17_contest_qc.py --freeze-run R1 --phase final --strict
 python 02_代码/08_pipeline.py \
   --strict \
   --strict-numbers \
@@ -68,6 +71,8 @@ python 02_代码/08_pipeline.py \
   --entry 02_代码/03_model_main.py \
   --zip
 ```
+
+将示例 `R1` 替换为 `run_record.csv` 中支撑论文结果/图表的正式 run_id。正式 run 必须有非空 `command`，并列出 `input_files`；无外部输入时填写 `not_applicable`。冻结命令只读取已完成运行声明的入口、输入、结果表和图表，不执行记录的命令，也不自动提升 `paper_ready`。任一冻结文件变化后，final QC 会阻断；团队必须确认变化合理、重新完成结果/图表审查，再显式冻结。
 
 证据同步器只为小问、结果表和图表创建 `candidate` 行，并保留所有人工确认字段。文件存在不代表模型正确、结果有效、图表已审或达到 `paper_ready`；正式状态仍只能通过运行记录、数学核验和 Contest QC 人工/机器审查推进。
 
@@ -102,7 +107,7 @@ python 02_代码/19_candidate_solution_tree.py select
 
 工具不会执行候选命令。只有退出成功、输入哈希一致、可行性与验证通过、证据哈希有效的节点才能参与选优；不同输入快照或不同 Benchmark case 的节点拒绝比较。`selected` 不会自动提升 Contest QC 或 `competition_ready`。详细契约见 [references/candidate-solution-tree.md](references/candidate-solution-tree.md)。
 
-完整流程只有在 `final_ready` 和 `competition_ready` 均通过后才发布 `07_提交包` 并推进到有效 S8。`completed` 还要求本轮 finalizer 成功；历史 S8 与旧 manifest 不会把被门禁阻断的重跑误报为已完成。开放 P0/P1、模板内容、项目外证据、失败 manifest、文件缺失或 SHA256 不一致都会阻断交付。
+完整流程只有在 `final_ready` 和 `competition_ready` 均通过后才发布 `07_提交包` 并推进到有效 S8。`completed` 还要求本轮 finalizer 成功；历史 S8 与旧 manifest 不会把被门禁阻断的重跑误报为已完成。开放 P0/P1、模板内容、未冻结或漂移的正式 run 产物、项目外证据、失败 manifest、文件缺失或 SHA256 不一致都会阻断交付。
 
 ## 验证
 

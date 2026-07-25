@@ -1,7 +1,7 @@
 {
   "name": "mathematical-modeling-agent",
   "version": "1.3.0",
-  "created_at": "2026-07-25T21:47:24",
+  "created_at": "2026-07-25T22:28:33",
   "distribution": "portable Hermes skill package",
   "file_count": 158,
   "excluded": [
@@ -44,13 +44,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 6935,
-      "sha256": "4c352d35546cfe092e81d435f69854ce7f5231589cd0146b9b46d3fb9191ea0a"
+      "bytes": 7697,
+      "sha256": "01232215db7ea1c6cf796431940ff1ec345be6c90a5eaa47bbde0677d2480b1f"
     },
     {
       "path": "RELEASE_NOTES.md",
-      "bytes": 2733,
-      "sha256": "36038ee60e21c6c72e7ff06e4a9dc76e776858d70dbabb9c4ffba4a38dc057e7"
+      "bytes": 2934,
+      "sha256": "798edb7b4ecf7d3965ee98863796d618844d13f493be4f2f38984dea8a9bbc55"
     },
     {
       "path": "SECURITY.md",
@@ -59,8 +59,8 @@
     },
     {
       "path": "SKILL.md",
-      "bytes": 31639,
-      "sha256": "7f52673d734ed8ddf4e83319f3a006c59762622ee0abd065fef914456a8d417c"
+      "bytes": 31962,
+      "sha256": "e91cc41472873cf887673014ffc78efa88d9d16e640849bd4ffa5042e7e180f2"
     },
     {
       "path": "benchmarks/cases/evaluation_rank_stability/case.json",
@@ -284,8 +284,8 @@
     },
     {
       "path": "docs/competition-workflow.md",
-      "bytes": 6962,
-      "sha256": "6dcce945cd56a35c1417882103b86d061d3fc0564c42f885ebc0e2cd205d26fa"
+      "bytes": 8253,
+      "sha256": "f6a601f80697434bfe2ceec4331b12c91628a10d7513181c57af8bd030fac9c0"
     },
     {
       "path": "docs/superpowers/plans/2026-07-12-candidate-solution-tree.md",
@@ -374,23 +374,23 @@
     },
     {
       "path": "references/competition-readiness-gate.md",
-      "bytes": 3922,
-      "sha256": "33503a10afbb32bda3e6e542ca25bfe778f1e10d9f965f6b713fa923c7979ed5"
+      "bytes": 4078,
+      "sha256": "3428cb0ad59cbf28fcd3c171582b4a62713470e06abcb0daddd3f368f35543be"
     },
     {
       "path": "references/contest-qc-integration-audit-20260711.md",
-      "bytes": 3968,
-      "sha256": "161484c339775bae3812ec6194548782a0e131aabd7a5f8cb4c6a8cc3338531b"
+      "bytes": 4299,
+      "sha256": "912a170ea4a4788cb3cb57703732bb0ae63484674c2093b16a665304d097effb"
     },
     {
       "path": "references/contest-quality-gate.md",
-      "bytes": 5954,
-      "sha256": "d8bc1e1f074205b08347ad888d55c44cb263fcee0275da195ed074f4bad9c1af"
+      "bytes": 6987,
+      "sha256": "5aee9ec8bcf414035c2f032da878c773c53d61fe80c54295242f021945872acb"
     },
     {
       "path": "references/continuous-optimization-notes.md",
-      "bytes": 21293,
-      "sha256": "3dee92c0c046638a42f4c63e959fd5c8b69a1732241ce39de3cb94d6e3920a41"
+      "bytes": 22595,
+      "sha256": "d1ede28542d1a05392fe5c6607cf1f15cc6a445092737539cef3372949f18b75"
     },
     {
       "path": "references/domain-checker-template-builder.md",
@@ -434,8 +434,8 @@
     },
     {
       "path": "references/project-state-machine.md",
-      "bytes": 4860,
-      "sha256": "5179e6f5215035ec05df0585f7611129b2de9f95aab15eed450fcf86b9553db6"
+      "bytes": 4917,
+      "sha256": "0f98e73ef0c2f0db2dd499c50a31a9f172040cc82551991d90dc3c5fec742962"
     },
     {
       "path": "references/quality-gate-plus.md",
@@ -639,13 +639,13 @@
     },
     {
       "path": "scripts/contest_qc_gate.py",
-      "bytes": 26725,
-      "sha256": "533dccde2771a2b319ccd88727cd1c6c596334f6c2b58f3f59f6845869d72efb"
+      "bytes": 43443,
+      "sha256": "2f32e219219a7ea99892a83a07d05781af696c61282a96dc201bc1388151d81b"
     },
     {
       "path": "scripts/create_modeling_project.py",
-      "bytes": 21617,
-      "sha256": "5bc02f8dd81b2b8d9ebfb6b4a61be6c9c67c385ec2efbb9890b9bbf400b2572c"
+      "bytes": 21922,
+      "sha256": "fa15f73fed37d4b6e023f1970cdc30f342bd5004559273a95920b22579385760"
     },
     {
       "path": "scripts/domain_checker_template_builder.py",
@@ -714,8 +714,8 @@
     },
     {
       "path": "scripts/tests/test_competition_grade_e2e.py",
-      "bytes": 9655,
-      "sha256": "f38a06232794c16434fc3b7cfd851a3360f433528117d8c01127ff3c9676e03a"
+      "bytes": 10779,
+      "sha256": "33963ec4afba816636b1fb3f62397168b57cd34109f0d9359a8fc5700f9174dd"
     },
     {
       "path": "scripts/tests/test_competition_readiness_truthiness.py",
@@ -729,13 +729,13 @@
     },
     {
       "path": "scripts/tests/test_contest_qc_gate.py",
-      "bytes": 9158,
-      "sha256": "1b9ab5823b52bf5fb0354a80a1a5f85a58be66f69b0006662bd0b19f1b4ae223"
+      "bytes": 22409,
+      "sha256": "eadd5a9ceecd1740393d2cf1fb08a2a9c280cc23fe24b3dd131432685abc5ec8"
     },
     {
       "path": "scripts/tests/test_create_modeling_project_portability.py",
-      "bytes": 2358,
-      "sha256": "b637e96b8700f4abfea1766fa67a327e907f9d31de8a63649f55b24729f0ae68"
+      "bytes": 2655,
+      "sha256": "93886ac7c639218b5dd779d8c9edd91ce6df5cdb5995c32137b50bed9e9f3ab7"
     },
     {
       "path": "scripts/tests/test_finalize_modeling_project.py",
@@ -799,8 +799,8 @@
     },
     {
       "path": "templates/project-README.md",
-      "bytes": 2821,
-      "sha256": "e69f12175fa948a51a4a951788e0cbef8847b2c9fa842d3add1c894985c329d7"
+      "bytes": 3331,
+      "sha256": "7f81795f0301610960447a12bc917d3e9103387cbe195bec6254fcb7b4b19870"
     }
   ]
 }
