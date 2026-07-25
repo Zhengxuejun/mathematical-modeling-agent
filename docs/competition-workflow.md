@@ -166,7 +166,7 @@ data_audit
 | `competition_ready` | 工程、模型、验证、风险分析和论文资产 | 允许生成正式提交包 |
 | `S8 / completed` | 本轮 finalizer 已发布通过 manifest 与校验和验证的当前包 | 人工检查最终文件并按官方渠道提交 |
 
-这些状态都不等于保证数学结论正确或保证获奖。历史 S8 不代表本轮仍然通过；重跑被门禁阻断时，Pipeline 报告 `blocked` 且 `current_package_published=false`。
+这些状态都不等于保证数学结论正确或保证获奖。历史 S8 不代表本轮仍然通过；重跑被门禁阻断时，Pipeline 报告 `blocked` 且 `current_package_published=false`。若前序步骤失败、Contest QC/readiness 被跳过或 readiness 子进程失败，本轮摘要固定为 `competition_ready=false`，不会回读旧 JSON 的 true。
 
 ## 8. 失败后的修复回路
 

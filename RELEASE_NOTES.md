@@ -5,6 +5,7 @@
 - Pipeline 仅在本轮 finalizer 成功时报告 `completed`；被门禁阻断的重跑不再沿用历史 S8、旧包路径或旧 manifest 统计。
 - Contest QC 新增 completed run 产物冻结：显式记录入口、输入、结果表和图表 SHA256，终稿前阻断未冻结、内容漂移或 run 输出关联不一致的 paper-ready 证据。
 - Contest QC 对 paper-ready 结果、图表和主张实行非空唯一 ID 与类型化引用门禁，阻断空值、重复身份和 `result`/`figure` 类型错配形成的伪追溯。
+- Pipeline 将 `competition_ready` 绑定到本轮实际 readiness 步骤；前序失败、跳过 Contest QC/readiness 或 readiness 进程失败时统一 fail-closed，不再回读上一轮 true。
 
 - 支持项目脚手架、S0-S8、题型路由、领域 checker 模板、审计、提交包和竞赛就绪度。
 - 增加竞赛质控账本：交付物锁定、真实数据 PoC、模型交接、数学核验、运行/结果/主张/图表追溯、P0/P1 与合规门禁。

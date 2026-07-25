@@ -49,3 +49,33 @@ def test_generated_checker_placeholders_do_not_poison_formal_model_readiness(tmp
     placeholder = next(check for check in summary["checks"] if check["id"] == "placeholder_replaced")
 
     assert placeholder["status"] == "pass"
+
+
+def test_failed_pipeline_summary_blocks_workflow_readiness(tmp_path: Path) -> None:
+    (tmp_path / "01_原始数据").mkdir()
+    (tmp_path / "01_原始数据/input.csv").write_text("id,value\na,1\n", encoding="utf-8")
+    (tmp_path / "03_结果表格").mkdir()
+    (tmp_path / "03_结果表格/model_results.csv").write_text(
+        "metric,value\nobjective,1\n", encoding="utf-8"
+    )
+    (tmp_path / "05_报告定稿").mkdir()
+    (tmp_path / "05_报告定稿/report.md").write_text("# Report\nCurrent results.\n", encoding="utf-8")
+    process = tmp_path / "06_过程记录"
+    process.mkdir()
+    (process / "problem_analysis.md").write_text(
+        "题目解析：" + "目标、数据、约束与输出。" * 20,
+        encoding="utf-8",
+    )
+    pipeline_dir = process / "pipeline"
+    pipeline_dir.mkdir()
+    (pipeline_dir / "pipeline_run_summary.json").write_text(
+        json.dumps({"phase": "pre_finalize", "recommended_status": "failed"}),
+        encoding="utf-8",
+    )
+
+    summary = assess(tmp_path)
+    pipeline_check = next(check for check in summary["checks"] if check["id"] == "pipeline_status")
+
+    assert pipeline_check["status"] == "fail"
+    assert summary["workflow_ready"] is False
+    assert summary["competition_ready"] is False

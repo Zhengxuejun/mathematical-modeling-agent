@@ -1,7 +1,7 @@
 {
   "name": "mathematical-modeling-agent",
   "version": "1.3.0",
-  "created_at": "2026-07-25T23:05:45",
+  "created_at": "2026-07-25T23:41:46",
   "distribution": "portable Hermes skill package",
   "file_count": 158,
   "excluded": [
@@ -44,13 +44,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 8003,
-      "sha256": "cdee8721a0d3c2ddb5ca18797ddc7d2ae7dc8e04f256ef63181322d7aab97828"
+      "bytes": 8068,
+      "sha256": "664adbda154d2cdc033550eecfc18983e387c88d77a251a35778a0c19079ca6d"
     },
     {
       "path": "RELEASE_NOTES.md",
-      "bytes": 3119,
-      "sha256": "8bcf5108837227af74ee5c223f3045a5d88104a9b56705b50fcde7aa8416db90"
+      "bytes": 3318,
+      "sha256": "75331ec84519ab08d0fcf2f6a9ef5d34fd852ccc0a7528acd06740b33094f99c"
     },
     {
       "path": "SECURITY.md",
@@ -59,8 +59,8 @@
     },
     {
       "path": "SKILL.md",
-      "bytes": 32041,
-      "sha256": "90baa9d6cb1851ab575057b432705f2ecb720593214a3bb21c09ce352434aad7"
+      "bytes": 32156,
+      "sha256": "7c9433b56e8d296cb7b9710faf040324570f9868487ae478ee956073cc9d46c7"
     },
     {
       "path": "benchmarks/cases/evaluation_rank_stability/case.json",
@@ -284,8 +284,8 @@
     },
     {
       "path": "docs/competition-workflow.md",
-      "bytes": 8577,
-      "sha256": "4fb2ae674062f50c72dd6eb280b0afd63edab95f253d9205274e0d18b9cf7d92"
+      "bytes": 8745,
+      "sha256": "17ecf4dd08464c5ed3a00fe9b80ea3296dae358a741c5c86e18570df2b2fa07f"
     },
     {
       "path": "docs/superpowers/plans/2026-07-12-candidate-solution-tree.md",
@@ -374,8 +374,8 @@
     },
     {
       "path": "references/competition-readiness-gate.md",
-      "bytes": 4078,
-      "sha256": "3428cb0ad59cbf28fcd3c171582b4a62713470e06abcb0daddd3f368f35543be"
+      "bytes": 4134,
+      "sha256": "3e3608022591a91a161830193e8ac419a2554e08517d9651ee5fef6ab000ab68"
     },
     {
       "path": "references/contest-qc-integration-audit-20260711.md",
@@ -389,8 +389,8 @@
     },
     {
       "path": "references/continuous-optimization-notes.md",
-      "bytes": 23249,
-      "sha256": "33e7b61cd0331811c38b2c10f210f3b6715eba8c048b4c39fb5b2afbc2751ac1"
+      "bytes": 24201,
+      "sha256": "ee4044b6c4623cc8f0b77e114eec199b0135ed230d73669133d3c41b253e3adf"
     },
     {
       "path": "references/domain-checker-template-builder.md",
@@ -419,8 +419,8 @@
     },
     {
       "path": "references/pipeline-runner.md",
-      "bytes": 5705,
-      "sha256": "cd2105dfb465981e2e39df1ae9b3b5b92999abd5d3f5af5300ec36a7ac112e14"
+      "bytes": 6354,
+      "sha256": "b47ecf3636bdf39a914f6840bc7f8ba9df7693f9409559b693e9c3d20c080915"
     },
     {
       "path": "references/problem-coverage-tracker.md",
@@ -629,8 +629,8 @@
     },
     {
       "path": "scripts/competition_readiness_gate.py",
-      "bytes": 20552,
-      "sha256": "210e22f0d59fc6efe5b6b06e171f75dec607a6488aa056ce8652b36fe14a5011"
+      "bytes": 20917,
+      "sha256": "c115faf5aa45be44faaaab8b06c527cfcf656b1617252dd5a2d8a0b0842863e5"
     },
     {
       "path": "scripts/contest_evidence_sync.py",
@@ -669,8 +669,8 @@
     },
     {
       "path": "scripts/modeling_pipeline.py",
-      "bytes": 36686,
-      "sha256": "3eed28077fd81f80eae38d684701959fa3f66bc422cafb4b7d37d91d5b23dcba"
+      "bytes": 37671,
+      "sha256": "6dd1bc084eda11e56da9227f90b422bc878a33b4f556518519336562d608c8d3"
     },
     {
       "path": "scripts/problem_coverage_tracker.py",
@@ -714,13 +714,13 @@
     },
     {
       "path": "scripts/tests/test_competition_grade_e2e.py",
-      "bytes": 12069,
-      "sha256": "415b41b3314a11504a463e1ae08d257d9b4d9d7cb392ad86ed0d7fcff26f6f4b"
+      "bytes": 16886,
+      "sha256": "780fe8a010e5d0568fe722b48bf59e630b74220f2e1af2083bad6754ba9522a6"
     },
     {
       "path": "scripts/tests/test_competition_readiness_truthiness.py",
-      "bytes": 2278,
-      "sha256": "1a72fe5477a662aacd1303a6fac81f4bd6e1cbe11b505f9f0602f8cbca1b6401"
+      "bytes": 3548,
+      "sha256": "be4227d383e8cafab06205bf4f3a9bf7c4025da425da29c966b97ecff6a77bb9"
     },
     {
       "path": "scripts/tests/test_contest_evidence_sync.py",
@@ -764,8 +764,8 @@
     },
     {
       "path": "scripts/tests/test_modeling_pipeline_order.py",
-      "bytes": 1352,
-      "sha256": "d0ffda6752c671c488824133b14da66831298c1741d8e0fd74c74693eac18ef1"
+      "bytes": 1950,
+      "sha256": "96795c2ebace76c8814615b322d3c14ab778dc8c8b6f44acf5a9d44ae516ceb4"
     },
     {
       "path": "scripts/tests/test_repair_advisor.py",

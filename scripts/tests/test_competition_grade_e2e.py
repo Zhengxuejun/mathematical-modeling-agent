@@ -286,3 +286,124 @@ def test_evidence_sync_failure_skips_contest_qc_and_finalizer(tmp_path: Path) ->
     assert contest_qc["skipped"]
     assert contest_qc["reason"] == "contest evidence synchronization failed"
     assert finalize["skipped"]
+
+
+def test_failed_upstream_step_invalidates_current_competition_readiness(tmp_path: Path) -> None:
+    project = make_competition_project(tmp_path)
+    data_audit = project / "02_代码/00_data_audit.py"
+    data_audit.write_text("raise SystemExit(0)\n", encoding="utf-8")
+    command = [
+        sys.executable,
+        str(SCRIPT_DIR / "modeling_pipeline.py"),
+        str(project),
+        "--entry",
+        "02_代码/solve.py",
+        "--report",
+        "05_报告定稿/report_draft.md",
+    ]
+
+    first = subprocess.run(command, text=True, capture_output=True, timeout=60)
+    assert first.returncode == 0, first.stdout + "\n" + first.stderr
+    first_summary = json.loads(
+        (project / "06_过程记录/pipeline/pipeline_run_summary.json").read_text(encoding="utf-8")
+    )
+    assert first_summary["competition_ready"] is True
+
+    data_audit.write_text("raise SystemExit(7)\n", encoding="utf-8")
+    second = subprocess.run(command, text=True, capture_output=True, timeout=60)
+
+    assert second.returncode == 1
+    summary = json.loads(
+        (project / "06_过程记录/pipeline/pipeline_run_summary.json").read_text(encoding="utf-8")
+    )
+    assert summary["recommended_status"] == "failed"
+    assert summary["competition_readiness"] is None
+    assert summary["competition_ready"] is False
+    assert summary["competition_counts"] == {}
+    assert summary["current_package_published"] is False
+    assert summary["final_package"] == ""
+    audit_step = next(step for step in summary["steps"] if step["name"] == "data_audit")
+    readiness_step = next(step for step in summary["steps"] if step["name"] == "competition_readiness")
+    assert audit_step["exit_code"] == 7
+    assert not audit_step["skipped"]
+    assert readiness_step["skipped"]
+    assert "failed predecessor steps: data_audit" in readiness_step["reason"]
+
+
+def test_skipped_competition_readiness_does_not_reuse_previous_true(tmp_path: Path) -> None:
+    project = make_competition_project(tmp_path)
+    command = [
+        sys.executable,
+        str(SCRIPT_DIR / "modeling_pipeline.py"),
+        str(project),
+        "--entry",
+        "02_代码/solve.py",
+        "--report",
+        "05_报告定稿/report_draft.md",
+    ]
+
+    first = subprocess.run(command, text=True, capture_output=True, timeout=60)
+    assert first.returncode == 0, first.stdout + "\n" + first.stderr
+    first_summary = json.loads(
+        (project / "06_过程记录/pipeline/pipeline_run_summary.json").read_text(encoding="utf-8")
+    )
+    assert first_summary["competition_ready"] is True
+
+    second = subprocess.run(
+        [*command, "--skip-competition-readiness"],
+        text=True,
+        capture_output=True,
+        timeout=60,
+    )
+
+    assert second.returncode == 1
+    summary = json.loads(
+        (project / "06_过程记录/pipeline/pipeline_run_summary.json").read_text(encoding="utf-8")
+    )
+    assert summary["recommended_status"] == "blocked"
+    assert summary["competition_readiness"] is None
+    assert summary["competition_ready"] is False
+    assert summary["competition_counts"] == {}
+    assert summary["current_package_published"] is False
+    assert summary["final_package"] == ""
+    readiness_step = next(step for step in summary["steps"] if step["name"] == "competition_readiness")
+    assert readiness_step["skipped"]
+    assert readiness_step["reason"] == "--skip-competition-readiness"
+
+
+def test_skipped_contest_qc_invalidates_current_competition_readiness(tmp_path: Path) -> None:
+    project = make_competition_project(tmp_path)
+    command = [
+        sys.executable,
+        str(SCRIPT_DIR / "modeling_pipeline.py"),
+        str(project),
+        "--entry",
+        "02_代码/solve.py",
+        "--report",
+        "05_报告定稿/report_draft.md",
+    ]
+
+    first = subprocess.run(command, text=True, capture_output=True, timeout=60)
+    assert first.returncode == 0, first.stdout + "\n" + first.stderr
+    first_summary = json.loads(
+        (project / "06_过程记录/pipeline/pipeline_run_summary.json").read_text(encoding="utf-8")
+    )
+    assert first_summary["competition_ready"] is True
+
+    second = subprocess.run(
+        [*command, "--skip-contest-qc"],
+        text=True,
+        capture_output=True,
+        timeout=60,
+    )
+
+    assert second.returncode == 1
+    summary = json.loads(
+        (project / "06_过程记录/pipeline/pipeline_run_summary.json").read_text(encoding="utf-8")
+    )
+    assert summary["competition_readiness"] is None
+    assert summary["competition_ready"] is False
+    assert summary["competition_counts"] == {}
+    readiness_step = next(step for step in summary["steps"] if step["name"] == "competition_readiness")
+    assert readiness_step["skipped"]
+    assert readiness_step["reason"] == "required predecessor step not completed: contest_qc"

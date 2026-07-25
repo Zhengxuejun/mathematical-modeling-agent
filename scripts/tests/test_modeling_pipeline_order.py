@@ -7,7 +7,7 @@ SCRIPT_DIR = Path(__file__).resolve().parents[1]
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-from modeling_pipeline import pipeline_step_names
+from modeling_pipeline import StepResult, current_competition_summary, pipeline_step_names
 
 
 def test_full_pipeline_packages_after_report_and_competition_gates() -> None:
@@ -33,3 +33,18 @@ def test_skeleton_pipeline_never_packages() -> None:
     ]
     assert "finalize" not in names
     assert "state_update_final" not in names
+
+
+def test_failed_readiness_step_cannot_reuse_previous_true(tmp_path: Path) -> None:
+    output = tmp_path / "competition_readiness.json"
+    output.write_text('{"readiness":"competition_ready","competition_ready":true}\n', encoding="utf-8")
+    failed = StepResult(
+        name="competition_readiness",
+        command=["python", "competition_readiness_gate.py"],
+        exit_code=9,
+        duration_sec=0.1,
+        stdout_tail="",
+        stderr_tail="failed before writing output",
+    )
+
+    assert current_competition_summary(failed, output) == {}
