@@ -115,6 +115,8 @@ python 02_代码/17_contest_qc.py --freeze-run R1 --phase final --strict
 
 将 `R1` 替换为真实 run_id；存在多个支撑 run 时逐个执行。completed run 必须有非空 `command`，并在 `input_files` 中列出输入/依赖；确实没有外部输入时显式填写 `not_applicable`。命令不会运行 `run_record.command`，只把项目内文件的相对路径、字节数和 SHA256 写入 `06_过程记录/竞赛质控/artifact_manifest.csv`。绝对路径、`..`、项目外 symlink、缺失文件和非 completed run 会被拒绝；并发冻结通过锁串行更新，旧清单不会被覆盖或半写入。
 
+冻结后还要检查证据身份：所有 `paper_ready` 的 `result_id`、`figure_id`、`claim_id` 必须非空且各自唯一，`claim_ledger.csv.evidence_type` 只能用 `result` 或 `figure`，并在对应类型的 ID 集合中解析。空值、重复身份、未知引用或类型错配都会使 final QC `blocked`。
+
 冻结只证明文件此后未变化，不证明模型正确。代码、输入、结果表或图表变化后，必须先重跑并重新审查正式结果，再显式冻结；不能在门禁中自动重算哈希，否则会把未审核改动静默合法化。
 
 ## 6. 运行完整 Pipeline

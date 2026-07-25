@@ -505,6 +505,27 @@ def clean(value: Any) -> str:
     return str(value or "").strip()
 
 
+def collect_registry_ids(
+    rows: list[dict[str, str]], field: str, label: str,
+) -> tuple[set[str], list[str]]:
+    values = [clean(row.get(field)) for row in rows]
+    issues: list[str] = []
+    empty_count = sum(not value for value in values)
+    if empty_count:
+        issues.append(f"{label}:empty={empty_count}")
+    seen: set[str] = set()
+    duplicates: set[str] = set()
+    for value in values:
+        if not value:
+            continue
+        if value in seen:
+            duplicates.add(value)
+        seen.add(value)
+    if duplicates:
+        issues.append(f"{label}:duplicate={','.join(sorted(duplicates))}")
+    return seen, issues
+
+
 def is_resolved(value: str) -> bool:
     return clean(value).lower() in {"resolved", "fixed", "closed", "passed", "pass", "accepted"}
 
@@ -739,26 +760,50 @@ def evaluate(project: Path, phase: str) -> dict[str, Any]:
 
     if phase == "final":
         results = load_csv(qc / "result_registry.csv")
-        ready_results = [
+        paper_result_rows = [
             r for r in results
             if clean(r.get("validation_status")).lower() == "paper_ready"
-            and clean(r.get("run_id")) in completed_runs
+        ]
+        ready_results = [
+            r for r in paper_result_rows
+            if clean(r.get("run_id")) in completed_runs
             and path_exists_from_project(project, clean(r.get("source_table")))
             and path_exists_from_project(project, clean(r.get("source_script")))
         ]
-        result_ids = {clean(r.get("result_id")) for r in ready_results}
+        _, result_identity_issues = collect_registry_ids(
+            paper_result_rows, "result_id", "result_id",
+        )
+        if len(ready_results) != len(paper_result_rows):
+            result_identity_issues.append(
+                f"result_id:unqualified={len(paper_result_rows) - len(ready_results)}"
+            )
+        result_ids = {
+            clean(row.get("result_id")) for row in ready_results if clean(row.get("result_id"))
+        }
         figures_path = qc / "figure_evidence.csv"
         figures = load_csv(figures_path)
-        ready_figure_rows = [
+        paper_figure_rows = [
             r for r in figures
             if clean(r.get("validation_status")).lower() == "paper_ready"
-            and clean(r.get("run_id")) in completed_runs
+        ]
+        ready_figure_rows = [
+            r for r in paper_figure_rows
+            if clean(r.get("run_id")) in completed_runs
             and clean(r.get("caption"))
             and clean(r.get("post_figure_conclusion"))
             and (clean(r.get("render_check_status")).lower() == "passed" or clean(r.get("human_visual_check")).lower() == "passed")
             and path_exists_from_project(project, clean(r.get("figure_path")))
         ]
-        figure_ids = {clean(r.get("figure_id")) for r in ready_figure_rows}
+        _, figure_identity_issues = collect_registry_ids(
+            paper_figure_rows, "figure_id", "figure_id",
+        )
+        if len(ready_figure_rows) != len(paper_figure_rows):
+            figure_identity_issues.append(
+                f"figure_id:unqualified={len(paper_figure_rows) - len(ready_figure_rows)}"
+            )
+        figure_ids = {
+            clean(row.get("figure_id")) for row in ready_figure_rows if clean(row.get("figure_id"))
+        }
         integrity_ok, integrity_message, integrity_evidence = check_artifact_integrity(
             project, runs, results, figures, completed_runs,
         )
@@ -770,11 +815,40 @@ def evaluate(project: Path, phase: str) -> dict[str, Any]:
         claims_path = qc / "claim_ledger.csv"
         claims = load_csv(claims_path)
         paper_claims = [r for r in claims if clean(r.get("status")).lower() == "paper_ready"]
-        bad_claims = [r for r in paper_claims if clean(r.get("evidence_id")) not in result_ids | figure_ids]
+        _, claim_identity_issues = collect_registry_ids(paper_claims, "claim_id", "claim_id")
+        claim_link_issues: list[str] = []
+        for row in paper_claims:
+            claim_id = clean(row.get("claim_id")) or "<empty>"
+            evidence_id = clean(row.get("evidence_id"))
+            evidence_type = clean(row.get("evidence_type")).lower()
+            if not evidence_id:
+                claim_link_issues.append(f"{claim_id}:empty_evidence_id")
+            elif evidence_type == "result":
+                if evidence_id not in result_ids:
+                    claim_link_issues.append(f"{claim_id}:unknown_result:{evidence_id}")
+            elif evidence_type == "figure":
+                if evidence_id not in figure_ids:
+                    claim_link_issues.append(f"{claim_id}:unknown_figure:{evidence_id}")
+            else:
+                claim_link_issues.append(f"{claim_id}:invalid_evidence_type:{evidence_type or '<empty>'}")
+        claim_evidence_issues = (
+            result_identity_issues + figure_identity_issues
+            + claim_identity_issues + claim_link_issues
+        )
+        claim_evidence_ok = bool(paper_claims) and not claim_evidence_issues
+        if claim_evidence_ok:
+            claim_message = f"存在 {len(paper_claims)} 条具有唯一、类型化证据身份的 paper_ready 主张"
+        elif not paper_claims:
+            claim_message = "没有 paper_ready 论文主张"
+        else:
+            claim_message = f"论文级证据身份或主张映射存在 {len(claim_evidence_issues)} 个问题"
+        claim_evidence_path = rel(project, claims_path)
+        if claim_evidence_issues:
+            claim_evidence_path += "; " + "; ".join(claim_evidence_issues)
         add(
-            "paper_claim_evidence", "final", "pass" if paper_claims and not bad_claims else "fail",
-            f"存在 {len(paper_claims)} 条可追溯 paper_ready 主张" if paper_claims and not bad_claims else "论文级主张缺少 paper_ready result/figure 证据映射",
-            rel(project, claims_path), "每条摘要/结论主张要映射到 paper_ready 的 result_id 或 figure_id。",
+            "paper_claim_evidence", "final", "pass" if claim_evidence_ok else "fail",
+            claim_message, claim_evidence_path,
+            "确保 paper_ready 的 result_id、figure_id、claim_id 非空且各自唯一，并按 evidence_type=result|figure 映射证据。",
         )
         provided_deliverable_ids = {
             clean(row.get("deliverable_id")) for row in valid_deliverables

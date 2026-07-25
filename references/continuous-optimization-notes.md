@@ -522,3 +522,9 @@ python 02_代码/17_contest_qc.py --freeze-run R1 --phase final --strict
 冻结命令只读取 `run_status=completed` 且具有非空 `command`、明确输入声明的运行记录，不执行其中的命令；无外部输入必须显式写 `not_applicable`。它校验项目内相对路径，流式计算入口、输入、结果表和图表的 SHA256/字节数，并通过文件锁保护原子、幂等的读改写事务，同时保留其他 run。绝对路径、`..`、项目外 symlink、缺失文件、重复或未完成 run 会在写盘前失败。
 
 final 门禁只对支撑 `paper_ready` 结果/图表的 completed run 强制完整性：清单缺失、schema/身份异常、声明集合变化、内容哈希漂移、结果表不是 run 声明输出、源脚本不是 run 入口或图表不是 run 声明输出都会 fail-closed。同步器生成的 `candidate` 不参与该门禁。SHA256 只证明冻结后未变化，不证明数学正确；合法修改仍必须重跑、重审并显式重新冻结。
+
+## 23. 当前已实现：Paper-ready 证据身份完整性
+
+已修复“空 `result_id` 与空 `evidence_id` 可以互相匹配，使没有真实证据身份的论文主张保持 `final_ready`”的追溯绕过。
+
+final 门禁现在要求所有 `paper_ready` 的 `result_id`、`figure_id`、`claim_id` 非空且在各自登记表中唯一；每条主张必须声明 `evidence_type=result|figure`，并在对应类型的 ID 命名空间中解析。空 ID、重复 ID、未知引用、空类型或跨类型引用都会 fail-closed。该检查只验证身份和引用契约，不解析结果表数值，也不把候选证据自动提升为论文证据。

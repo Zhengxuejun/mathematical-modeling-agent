@@ -74,6 +74,8 @@ python 02_代码/08_pipeline.py \
 
 将示例 `R1` 替换为 `run_record.csv` 中支撑论文结果/图表的正式 run_id。正式 run 必须有非空 `command`，并列出 `input_files`；无外部输入时填写 `not_applicable`。冻结命令只读取已完成运行声明的入口、输入、结果表和图表，不执行记录的命令，也不自动提升 `paper_ready`。任一冻结文件变化后，final QC 会阻断；团队必须确认变化合理、重新完成结果/图表审查，再显式冻结。
 
+`paper_ready` 的 `result_id`、`figure_id` 和 `claim_id` 必须非空且各自唯一；每条主张还必须用 `evidence_type=result|figure` 指向对应类型的证据。空 ID、重复 ID、未知 ID 或类型错配都会阻断 final QC，不能靠空值或歧义引用形成“可追溯”主张。
+
 证据同步器只为小问、结果表和图表创建 `candidate` 行，并保留所有人工确认字段。文件存在不代表模型正确、结果有效、图表已审或达到 `paper_ready`；正式状态仍只能通过运行记录、数学核验和 Contest QC 人工/机器审查推进。
 
 ## 能力基准

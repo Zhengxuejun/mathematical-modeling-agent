@@ -59,7 +59,7 @@ metadata:
 - `scripts/finalize_modeling_project.py`：在干净 staging 目录生成 README、manifest v2.0 和 SHA256，自校验通过后原子替换正式提交包。
 - `scripts/submission_package_contract.py`：finalizer 与 S8 状态机共享的提交包契约，验证路径边界、文件库存、失败检查和 SHA256。
 - `scripts/competition_readiness_gate.py`：竞赛就绪度门禁，读取项目产物、审计 JSON、`contest_qc_gate.json` 与可选 `competition_evidence.json`，输出 workflow/model/competition 三层 readiness。
-- `scripts/contest_qc_gate.py`：竞赛质控账本门禁；`--init` 非破坏性创建登记表，`--freeze-run RUN_ID` 冻结 completed run 的入口、输入、结果表和图表 SHA256，`--phase early|model|final` 检查交付物、真实数据 PoC、运行/结果/主张追溯、产物漂移、评委风险和提交合规。它是证据账本真相源，`competition_evidence_builder.py` 仅作启发式证据索引。
+- `scripts/contest_qc_gate.py`：竞赛质控账本门禁；`--init` 非破坏性创建登记表，`--freeze-run RUN_ID` 冻结 completed run 的入口、输入、结果表和图表 SHA256，`--phase early|model|final` 检查交付物、真实数据 PoC、运行/结果/主张追溯、paper-ready 身份唯一性、产物漂移、评委风险和提交合规。它是证据账本真相源，`competition_evidence_builder.py` 仅作启发式证据索引。
 - `scripts/contest_evidence_sync.py`：Contest QC 待审核候选同步器；从小问、项目内结果表/图表和 completed run 精确路径关联生成 `candidate`，保留人工非空字段，并用可恢复事务防止半写入。文件发现不等于验证通过。
 - `scripts/competition_evidence_builder.py`：竞赛证据自动汇总器，在门禁前生成 `06_过程记录/competition_evidence.json/md`，让模型/checker/仿真/敏感性/论文资产证据可审计；现已区分 `template_checker_only` 与 `implemented_checker_pass`。
 - `scripts/model_skeleton_router.py`：模型骨架路由器，从 S1 题目解析生成题型、变量/参数、模型核心、领域 checker、验证资产与可选 starter code。
@@ -365,7 +365,7 @@ report/
 - [ ] 不夸大模型精度，不隐藏数据不足。
 - [ ] 若任务是历史题复跑，最终输出必须优先说明技能诊断发现、已做技能补丁、下次流程如何改进；数值复跑结果只能作为证据或链路测试，不得喧宾夺主。
 - [ ] 若真实题测试只跑通轻量 baseline/placeholder 模型，必须明确区分“S0-S8 工程闭环完成”和“正式最优解完成”；不得把 `recommended_status=completed` 解释为国赛答案可提交。
-- [ ] 真实比赛/冲奖目标下，支撑 `paper_ready` 的 completed run 必须先用 `--freeze-run RUN_ID` 冻结入口、输入、结果表和图表，再运行 `contest_qc_gate.py --phase final`：任何产物漂移、真实附件 PoC、模型交接、数学核验、可复现 run、主张/图表证据、P0/P1 风险或当前官方规则/匿名/AI 披露缺口都不能被润色掩盖；只有 `final_ready` 才表示该证据层通过。
+- [ ] 真实比赛/冲奖目标下，支撑 `paper_ready` 的 completed run 必须先用 `--freeze-run RUN_ID` 冻结入口、输入、结果表和图表，再运行 `contest_qc_gate.py --phase final`：任何产物漂移、空/重复证据 ID、主张证据类型错配、真实附件 PoC、模型交接、数学核验、可复现 run、主张/图表证据、P0/P1 风险或当前官方规则/匿名/AI 披露缺口都不能被润色掩盖；只有 `final_ready` 才表示该证据层通过。
 - [ ] 自动同步产生的 `candidate` 只能作为待审核线索；不得仅因文件存在将其手工批量改为 `provided`、`checked` 或 `paper_ready`。
 - [ ] Benchmark 的 `strong` 只表示合成案例契约下的回归结果；不得将其表述为正式题模型正确、项目可提交或获奖概率。
 - [ ] 候选树的 `selected` 只表示同输入、同评估口径下的局部选优；仍需题目特定 checker、敏感性/鲁棒性、Contest QC 和 `competition_readiness_gate.py`。

@@ -68,7 +68,7 @@ final_ready   当前提交级证据通过；不代表必然获奖
 - `math_verification.csv`：量纲、边界、守恒、约束、公式回代、可行性措辞等硬检查。
 - `run_record.csv` 与 `result_registry.csv`：把数值与可复现命令、输入、参数、seed、源表绑定；`result_registry.csv.deliverable_id` 必须映射到题目交付物。
 - `artifact_manifest.csv`：由 `--freeze-run` 原子写入 completed run 声明的入口、输入、结果表和图表 SHA256/字节数。final 门禁只信任清单中仍与当前文件一致、且结果/图表确属该 run 声明输出的 paper-ready 证据。
-- `claim_ledger.csv` 与 `figure_evidence.csv`：摘要/结论/主图必须映射到 `paper_ready` 证据；主图还要有 run、caption、图后结论以及 render 或人工可读性检查，`figure_evidence.csv.deliverable_id` 使每个交付物可追溯。
+- `result_registry.csv`、`claim_ledger.csv` 与 `figure_evidence.csv`：`paper_ready` 的 `result_id`、`figure_id`、`claim_id` 必须非空且各自唯一；主张通过 `evidence_type=result|figure` 映射到对应类型 ID。主图还要有 run、caption、图后结论以及 render 或人工可读性检查，`figure_evidence.csv.deliverable_id` 使每个交付物可追溯。
 - `review_findings.csv`：P0/P1/P2/P3 评委风险。终稿前不允许开放 P0/P1。
 - `review_pass_items.csv`：终稿至少五项可定位的通过证据，避免只写“已检查”。
 - `submission_checklist.md`：来自当前官方规则的格式、匿名、复现和 AI 披露状态；禁止沿用往年规则猜测。
@@ -93,4 +93,5 @@ final_ready   当前提交级证据通过；不代表必然获奖
 - 不把模板、生成骨架、演示数据、单次试跑或好看的图提升为 `paper_ready`。
 - 不把模型名字、没有真实数据 PoC 的方法或没有单位/约束的公式交给正式代码。
 - 不让摘要/结论引用未冻结的数值、未验证图表或未完成 run。
+- 不让空 ID、重复 ID、未知 ID 或错误的 `evidence_type` 冒充论文证据追溯。
 - 不因“自动检查全绿”声称必然获奖；真实题意、模型合理性和论文洞见仍需人工/智能体审查。
