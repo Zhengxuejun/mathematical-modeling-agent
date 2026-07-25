@@ -44,3 +44,8 @@ def test_scaffold_wrappers_resolve_the_current_installed_skill_path(tmp_path: Pa
     assert initialized.returncode == 0, initialized.stdout + initialized.stderr
     assert (project / "06_过程记录/候选方案树/candidate_tree.json").is_file()
     assert (project / "06_过程记录" / "竞赛质控" / "deliverable_matrix.csv").is_file()
+    artifact_manifest = project / "06_过程记录" / "竞赛质控" / "artifact_manifest.csv"
+    assert artifact_manifest.is_file()
+    assert artifact_manifest.read_text(encoding="utf-8-sig").splitlines()[0] == (
+        "artifact_id,run_id,role,path,sha256,bytes,frozen_at,status,notes"
+    )

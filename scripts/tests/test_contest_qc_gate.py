@@ -1,18 +1,27 @@
 from __future__ import annotations
 
 import csv
+import subprocess
 import sys
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+
+import pytest
 
 SCRIPT_DIR = Path(__file__).resolve().parents[1]
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
+import contest_qc_gate
 from contest_qc_gate import (
+    ArtifactFreezeError,
     MODEL_HANDOFF_TEMPLATE,
     QC_REL,
     REGISTRY_HEADERS,
     evaluate,
+    freeze_run_artifacts,
     init_project,
     non_template,
     path_exists_from_project,
@@ -27,7 +36,12 @@ def write_rows(path: Path, rows: list[dict[str, str]]) -> None:
         writer.writerows(rows)
 
 
-def make_final_ready_fixture(project: Path) -> None:
+def read_rows(path: Path) -> list[dict[str, str]]:
+    with path.open("r", encoding="utf-8-sig", newline="") as handle:
+        return [dict(row) for row in csv.DictReader(handle)]
+
+
+def make_final_ready_fixture(project: Path, *, freeze_artifacts: bool = True) -> None:
     (project / "01_原始数据").mkdir(parents=True)
     (project / "01_原始数据" / "input.csv").write_text("id,value\na,1\n", encoding="utf-8")
     (project / "02_代码").mkdir()
@@ -118,6 +132,8 @@ def make_final_ready_fixture(project: Path) -> None:
         "ai_disclosure_status: not_required\n",
         encoding="utf-8",
     )
+    if freeze_artifacts:
+        freeze_run_artifacts(project, "R1")
 
 
 def test_init_creates_qc_registry_headers_and_early_gate_blocks_empty_project(tmp_path: Path) -> None:
@@ -126,6 +142,7 @@ def test_init_creates_qc_registry_headers_and_early_gate_blocks_empty_project(tm
     init_project(project)
     qc = project / QC_REL
     assert (qc / "deliverable_matrix.csv").exists()
+    assert (qc / "artifact_manifest.csv").exists()
     assert (qc / "model_handoff.md").exists()
     summary = evaluate(project, "early")
     assert summary["readiness"] == "blocked"
@@ -176,3 +193,323 @@ def test_final_gate_requires_evidence_and_blocks_open_p1(tmp_path: Path) -> None
     blocked = evaluate(project, "final")
     assert blocked["readiness"] == "blocked"
     assert any(check["id"] == "judge_risk" and check["status"] == "fail" for check in blocked["checks"])
+
+
+def test_final_gate_fails_closed_until_supporting_run_is_frozen(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    make_final_ready_fixture(project, freeze_artifacts=False)
+
+    summary = evaluate(project, "final")
+
+    assert summary["readiness"] == "blocked"
+    integrity = next(check for check in summary["checks"] if check["id"] == "artifact_integrity")
+    assert integrity["status"] == "fail"
+    assert "R1" in integrity["evidence"]
+
+
+@pytest.mark.parametrize(
+    "relative_path",
+    [
+        "01_原始数据/input.csv",
+        "02_代码/solve.py",
+        "03_结果表格/result.csv",
+        "04_图表/result.png",
+    ],
+)
+def test_final_gate_blocks_when_frozen_run_artifact_changes(tmp_path: Path, relative_path: str) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    make_final_ready_fixture(project)
+    assert evaluate(project, "final")["readiness"] == "final_ready"
+
+    artifact = project / relative_path
+    artifact.write_bytes(artifact.read_bytes() + b"changed-after-freeze")
+
+    summary = evaluate(project, "final")
+    assert summary["readiness"] == "blocked"
+    integrity = next(check for check in summary["checks"] if check["id"] == "artifact_integrity")
+    assert integrity["status"] == "fail"
+    assert "R1" in integrity["evidence"]
+    assert relative_path in integrity["evidence"]
+
+
+def test_freeze_run_is_idempotent_and_never_executes_recorded_command(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    make_final_ready_fixture(project, freeze_artifacts=False)
+    qc = project / QC_REL
+    sentinel = project / "command-was-executed.txt"
+    runs = read_rows(qc / "run_record.csv")
+    runs[0]["command"] = f"python -c \"from pathlib import Path; Path({str(sentinel)!r}).write_text('bad')\""
+    write_rows(qc / "run_record.csv", runs)
+
+    first_rows = freeze_run_artifacts(project, "R1")
+    first_bytes = (qc / "artifact_manifest.csv").read_bytes()
+    second_rows = freeze_run_artifacts(project, "R1")
+    second_bytes = (qc / "artifact_manifest.csv").read_bytes()
+
+    assert first_rows == second_rows
+    assert first_bytes == second_bytes
+    assert not sentinel.exists()
+    assert {row["role"] for row in first_rows} == {
+        "entry_script", "input_file", "output_table", "output_figure",
+    }
+
+
+@pytest.mark.parametrize("bad_kind", ["parent", "absolute", "missing", "escaping_symlink"])
+def test_freeze_rejects_unsafe_or_missing_paths_without_rewriting_manifest(tmp_path: Path, bad_kind: str) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    make_final_ready_fixture(project)
+    qc = project / QC_REL
+    before = (qc / "artifact_manifest.csv").read_bytes()
+    outside = tmp_path / "outside.csv"
+    outside.write_text("id,value\noutside,2\n", encoding="utf-8")
+    if bad_kind == "parent":
+        bad_path = "../outside.csv"
+    elif bad_kind == "absolute":
+        bad_path = str(project / "01_原始数据/input.csv")
+    elif bad_kind == "missing":
+        bad_path = "01_原始数据/missing.csv"
+    else:
+        link = project / "01_原始数据/outside-link.csv"
+        link.symlink_to(outside)
+        bad_path = "01_原始数据/outside-link.csv"
+    runs = read_rows(qc / "run_record.csv")
+    runs[0]["input_files"] = bad_path
+    write_rows(qc / "run_record.csv", runs)
+
+    with pytest.raises(ArtifactFreezeError):
+        freeze_run_artifacts(project, "R1")
+
+    assert (qc / "artifact_manifest.csv").read_bytes() == before
+    reproducible = next(
+        check for check in evaluate(project, "model")["checks"] if check["id"] == "reproducible_run"
+    )
+    assert reproducible["status"] == "fail"
+
+
+@pytest.mark.parametrize("run_mutation", ["not_completed", "duplicate"])
+def test_freeze_rejects_ambiguous_or_incomplete_run(tmp_path: Path, run_mutation: str) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    make_final_ready_fixture(project, freeze_artifacts=False)
+    qc = project / QC_REL
+    runs = read_rows(qc / "run_record.csv")
+    if run_mutation == "not_completed":
+        runs[0]["run_status"] = "failed"
+    else:
+        runs.append(dict(runs[0]))
+    write_rows(qc / "run_record.csv", runs)
+    before = (qc / "artifact_manifest.csv").read_bytes()
+
+    with pytest.raises(ArtifactFreezeError):
+        freeze_run_artifacts(project, "R1")
+
+    assert (qc / "artifact_manifest.csv").read_bytes() == before
+
+
+@pytest.mark.parametrize("missing_field", ["command", "input_files"])
+def test_freeze_and_model_gate_reject_incomplete_reproduction_contract(tmp_path: Path, missing_field: str) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    make_final_ready_fixture(project, freeze_artifacts=False)
+    qc = project / QC_REL
+    runs = read_rows(qc / "run_record.csv")
+    runs[0][missing_field] = ""
+    write_rows(qc / "run_record.csv", runs)
+
+    with pytest.raises(ArtifactFreezeError):
+        freeze_run_artifacts(project, "R1")
+    summary = evaluate(project, "model")
+    assert summary["readiness"] == "blocked"
+    reproducible = next(check for check in summary["checks"] if check["id"] == "reproducible_run")
+    assert reproducible["status"] == "fail"
+
+
+def test_explicit_no_external_input_declaration_can_be_frozen(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    make_final_ready_fixture(project, freeze_artifacts=False)
+    qc = project / QC_REL
+    runs = read_rows(qc / "run_record.csv")
+    runs[0]["input_files"] = "not_applicable"
+    write_rows(qc / "run_record.csv", runs)
+
+    rows = freeze_run_artifacts(project, "R1")
+
+    assert "input_file" not in {row["role"] for row in rows}
+
+
+def test_concurrent_freezes_preserve_both_runs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    make_final_ready_fixture(project, freeze_artifacts=False)
+    qc = project / QC_REL
+    runs = read_rows(qc / "run_record.csv")
+    runs.append({**runs[0], "run_id": "R2", "command": "python solve.py --repeat"})
+    write_rows(qc / "run_record.csv", runs)
+    write_rows(qc / "artifact_manifest.csv", [])
+    original_fingerprint = contest_qc_gate.file_fingerprint
+
+    def slow_fingerprint(path: Path) -> tuple[str, str]:
+        time.sleep(0.02)
+        return original_fingerprint(path)
+
+    monkeypatch.setattr(contest_qc_gate, "file_fingerprint", slow_fingerprint)
+    start = threading.Barrier(2)
+
+    def freeze(run_id: str) -> None:
+        start.wait(timeout=5)
+        freeze_run_artifacts(project, run_id)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [pool.submit(freeze, run_id) for run_id in ("R1", "R2")]
+        for future in futures:
+            future.result(timeout=10)
+
+    assert {row["run_id"] for row in read_rows(qc / "artifact_manifest.csv")} == {"R1", "R2"}
+
+
+def test_atomic_replace_failure_preserves_existing_manifest(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    make_final_ready_fixture(project)
+    qc = project / QC_REL
+    before = (qc / "artifact_manifest.csv").read_bytes()
+    (project / "03_结果表格/result.csv").write_text(
+        "metric,value\nobjective,2\n", encoding="utf-8",
+    )
+
+    def fail_replace(source: str | Path, target: str | Path) -> None:
+        raise OSError("injected replace failure")
+
+    monkeypatch.setattr(contest_qc_gate.os, "replace", fail_replace)
+    with pytest.raises(ArtifactFreezeError, match="atomically update"):
+        freeze_run_artifacts(project, "R1")
+
+    assert (qc / "artifact_manifest.csv").read_bytes() == before
+    assert not list(qc.glob(".artifact_manifest.csv.*.tmp"))
+
+
+def test_refreezing_one_run_preserves_other_run_records(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    make_final_ready_fixture(project)
+    qc = project / QC_REL
+    runs = read_rows(qc / "run_record.csv")
+    runs.append({**runs[0], "run_id": "R2", "command": "python solve.py --repeat"})
+    write_rows(qc / "run_record.csv", runs)
+    freeze_run_artifacts(project, "R2")
+    r2_before = [row for row in read_rows(qc / "artifact_manifest.csv") if row["run_id"] == "R2"]
+
+    (project / "03_结果表格/result.csv").write_text(
+        "metric,value\nobjective,2\n", encoding="utf-8",
+    )
+    freeze_run_artifacts(project, "R1")
+
+    r2_after = [row for row in read_rows(qc / "artifact_manifest.csv") if row["run_id"] == "R2"]
+    assert r2_after == r2_before
+
+
+def test_invalid_manifest_encoding_fails_closed_without_crashing(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    make_final_ready_fixture(project)
+    manifest = project / QC_REL / "artifact_manifest.csv"
+    manifest.write_bytes(b"\xff\xfe\x00")
+
+    summary = evaluate(project, "final")
+
+    assert summary["readiness"] == "blocked"
+    integrity = next(check for check in summary["checks"] if check["id"] == "artifact_integrity")
+    assert integrity["status"] == "fail"
+    assert "schema" in integrity["message"]
+
+
+def test_paper_ready_source_script_may_be_a_frozen_run_dependency(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    make_final_ready_fixture(project, freeze_artifacts=False)
+    helper = project / "02_代码/model_core.py"
+    helper.write_text("def solve():\n    return 1\n", encoding="utf-8")
+    qc = project / QC_REL
+    runs = read_rows(qc / "run_record.csv")
+    runs[0]["input_files"] += ";02_代码/model_core.py"
+    write_rows(qc / "run_record.csv", runs)
+    results = read_rows(qc / "result_registry.csv")
+    results[0]["source_script"] = "02_代码/model_core.py"
+    write_rows(qc / "result_registry.csv", results)
+    freeze_run_artifacts(project, "R1")
+
+    assert evaluate(project, "final")["readiness"] == "final_ready"
+
+
+def test_final_gate_rejects_paper_ready_table_not_declared_by_its_run(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    make_final_ready_fixture(project, freeze_artifacts=False)
+    other = project / "03_结果表格/other.csv"
+    other.write_text("metric,value\nother,2\n", encoding="utf-8")
+    qc = project / QC_REL
+    runs = read_rows(qc / "run_record.csv")
+    runs[0]["output_tables"] = "03_结果表格/other.csv"
+    write_rows(qc / "run_record.csv", runs)
+    freeze_run_artifacts(project, "R1")
+
+    summary = evaluate(project, "final")
+
+    assert summary["readiness"] == "blocked"
+    integrity = next(check for check in summary["checks"] if check["id"] == "artifact_integrity")
+    assert integrity["status"] == "fail"
+    assert "03_结果表格/result.csv" in integrity["evidence"]
+
+
+def test_unfrozen_candidate_rows_do_not_invalidate_frozen_paper_evidence(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    make_final_ready_fixture(project)
+    qc = project / QC_REL
+    candidate = project / "03_结果表格/candidate.csv"
+    candidate.write_text("metric,value\ncandidate,2\n", encoding="utf-8")
+    rows = read_rows(qc / "result_registry.csv")
+    rows.append({
+        "result_id": "RSLT-CANDIDATE", "deliverable_id": "", "problem_id": "fixture",
+        "scenario_id": "candidate", "metric": "candidate", "value": "2", "unit": "万元",
+        "comparison_or_baseline": "", "source_table": "03_结果表格/candidate.csv",
+        "source_figure": "", "source_script": "", "run_id": "",
+        "validation_status": "candidate", "frozen_at": "", "superseded_by": "", "notes": "",
+    })
+    write_rows(qc / "result_registry.csv", rows)
+
+    assert evaluate(project, "final")["readiness"] == "final_ready"
+
+
+def test_cli_freezes_run_then_strictly_rejects_drift(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    make_final_ready_fixture(project, freeze_artifacts=False)
+    command = [
+        sys.executable, str(SCRIPT_DIR / "contest_qc_gate.py"), str(project),
+        "--freeze-run", "R1", "--phase", "final", "--strict",
+    ]
+
+    frozen = subprocess.run(command, text=True, capture_output=True, timeout=20)
+    assert frozen.returncode == 0, frozen.stdout + frozen.stderr
+    assert "Frozen run R1" in frozen.stdout
+
+    (project / "03_结果表格/result.csv").write_text(
+        "metric,value\nobjective,999\n", encoding="utf-8",
+    )
+    checked = subprocess.run(
+        [item for item in command if item not in {"--freeze-run", "R1"}],
+        text=True,
+        capture_output=True,
+        timeout=20,
+    )
+    assert checked.returncode == 1
+    assert "blocked" in checked.stdout
+    report = (project / QC_REL / "contest_qc_gate.md").read_text(encoding="utf-8")
+    assert "artifact_integrity" in report
+    assert "03_结果表格/result.csv" in report

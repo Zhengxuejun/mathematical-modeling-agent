@@ -507,3 +507,18 @@ references/candidate-solution-tree.md
 - 本轮未发布时，保留旧 `07_提交包`但不把其路径或 manifest 统计写入本轮结果。
 
 回归测试使用“首轮成功→新增开放 P1→二轮阻断”的端到端场景，并验证旧 manifest 未被删除也不被冒充为当前产物。
+
+## 22. 当前已实现：Contest QC 正式 Run 产物冻结
+
+已修复“`paper_ready` 只检查文件存在，结果表、图表、输入或入口在审核后被改写仍可保持 `final_ready`”的证据漂移。
+
+新增：
+
+```text
+06_过程记录/竞赛质控/artifact_manifest.csv
+python 02_代码/17_contest_qc.py --freeze-run R1 --phase final --strict
+```
+
+冻结命令只读取 `run_status=completed` 且具有非空 `command`、明确输入声明的运行记录，不执行其中的命令；无外部输入必须显式写 `not_applicable`。它校验项目内相对路径，流式计算入口、输入、结果表和图表的 SHA256/字节数，并通过文件锁保护原子、幂等的读改写事务，同时保留其他 run。绝对路径、`..`、项目外 symlink、缺失文件、重复或未完成 run 会在写盘前失败。
+
+final 门禁只对支撑 `paper_ready` 结果/图表的 completed run 强制完整性：清单缺失、schema/身份异常、声明集合变化、内容哈希漂移、结果表不是 run 声明输出、源脚本不是 run 入口或图表不是 run 声明输出都会 fail-closed。同步器生成的 `candidate` 不参与该门禁。SHA256 只证明冻结后未变化，不证明数学正确；合法修改仍必须重跑、重审并显式重新冻结。

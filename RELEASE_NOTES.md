@@ -3,6 +3,7 @@
 - 当前源码发行版采用 Mozilla Public License 2.0。
 - 恢复版权所有者名称为 `Zhengxuejun`。
 - Pipeline 仅在本轮 finalizer 成功时报告 `completed`；被门禁阻断的重跑不再沿用历史 S8、旧包路径或旧 manifest 统计。
+- Contest QC 新增 completed run 产物冻结：显式记录入口、输入、结果表和图表 SHA256，终稿前阻断未冻结、内容漂移或 run 输出关联不一致的 paper-ready 证据。
 
 - 支持项目脚手架、S0-S8、题型路由、领域 checker 模板、审计、提交包和竞赛就绪度。
 - 增加竞赛质控账本：交付物锁定、真实数据 PoC、模型交接、数学核验、运行/结果/主张/图表追溯、P0/P1 与合规门禁。

@@ -10,11 +10,12 @@ flowchart TD
     B --> C[2. Baseline 与候选模型开发]
     C --> D[3. 候选树评估和选优]
     D --> E[4. 正式模型与验证资产]
-    E --> F[5. 完整 Pipeline]
-    F --> G{终稿门禁通过?}
-    G -->|否| H[Repair Advisor 修复清单]
-    H --> C
-    G -->|是| I[6. 发布提交包并推进 S8]
+    E --> F[5. 冻结正式 Run 产物]
+    F --> G[6. 完整 Pipeline]
+    G --> H{终稿门禁通过?}
+    H -->|否| I[Repair Advisor 修复清单]
+    I --> C
+    H -->|是| J[7. 发布提交包并推进 S8]
 ```
 
 ## 0. 创建项目并锁定题目
@@ -104,7 +105,19 @@ python 02_代码/19_candidate_solution_tree.py select
 python 02_代码/17_contest_qc.py --phase model --strict
 ```
 
-## 5. 运行完整 Pipeline
+## 5. 冻结正式 Run 产物
+
+当正式运行已完成、`run_record.csv` 已准确填写入口、输入、结果表和图表，且这些结果已经完成人工/机器审查后，冻结支撑论文证据的 run：
+
+```bash
+python 02_代码/17_contest_qc.py --freeze-run R1 --phase final --strict
+```
+
+将 `R1` 替换为真实 run_id；存在多个支撑 run 时逐个执行。completed run 必须有非空 `command`，并在 `input_files` 中列出输入/依赖；确实没有外部输入时显式填写 `not_applicable`。命令不会运行 `run_record.command`，只把项目内文件的相对路径、字节数和 SHA256 写入 `06_过程记录/竞赛质控/artifact_manifest.csv`。绝对路径、`..`、项目外 symlink、缺失文件和非 completed run 会被拒绝；并发冻结通过锁串行更新，旧清单不会被覆盖或半写入。
+
+冻结只证明文件此后未变化，不证明模型正确。代码、输入、结果表或图表变化后，必须先重跑并重新审查正式结果，再显式冻结；不能在门禁中自动重算哈希，否则会把未审核改动静默合法化。
+
+## 6. 运行完整 Pipeline
 
 终稿阶段运行：
 
@@ -140,9 +153,9 @@ data_audit
 → state_update_final
 ```
 
-其中 `contest_evidence_sync` 只创建待审核的 `candidate` 行，不能自动生成 `checked` 或 `paper_ready`。最终打包只有在 Contest QC 为 `final_ready` 且 `competition_ready=true` 时才执行。
+其中 `contest_evidence_sync` 只创建待审核的 `candidate` 行，不能自动生成 `checked` 或 `paper_ready`。Pipeline 不会自动冻结或更新产物哈希；`contest_qc` 会核验支撑 paper-ready 证据的 run 是否已冻结且未漂移。最终打包只有在 Contest QC 为 `final_ready` 且 `competition_ready=true` 时才执行。
 
-## 6. 理解四类状态
+## 7. 理解四类状态
 
 | 状态 | 责任边界 | 下一步 |
 |---|---|---|
@@ -153,7 +166,7 @@ data_audit
 
 这些状态都不等于保证数学结论正确或保证获奖。历史 S8 不代表本轮仍然通过；重跑被门禁阻断时，Pipeline 报告 `blocked` 且 `current_package_published=false`。
 
-## 7. 失败后的修复回路
+## 8. 失败后的修复回路
 
 先看总控摘要：
 
@@ -169,7 +182,7 @@ data_audit
 
 修复时回到最早出现问题的阶段：题意或输入问题回到数据审计；模型与可行性问题回到候选开发；证据或报告问题回到正式资产；合规问题回到 Contest QC。不要通过跳过门禁或手工修改 readiness JSON 进入打包。
 
-## 8. 比赛时间安排
+## 9. 比赛时间安排
 
 推荐节奏：
 

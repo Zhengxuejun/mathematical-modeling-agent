@@ -18,12 +18,19 @@ from __future__ import annotations
 
 import argparse
 import csv
+import fcntl
+import hashlib
+import io
 import json
+import os
+import re
 import sys
+import tempfile
+from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 
 QC_REL = Path("06_过程记录") / "竞赛质控"
 
@@ -50,6 +57,9 @@ REGISTRY_HEADERS: dict[str, list[str]] = {
         "run_id", "problem_id", "model_version", "command", "entry_script", "input_files",
         "parameters", "seed", "solver", "solver_status", "warnings", "output_tables",
         "output_figures", "log_path", "started_at", "completed_at", "run_status", "superseded_by", "notes",
+    ],
+    "artifact_manifest.csv": [
+        "artifact_id", "run_id", "role", "path", "sha256", "bytes", "frozen_at", "status", "notes",
     ],
     "result_registry.csv": [
         "result_id", "deliverable_id", "problem_id", "scenario_id", "metric", "value", "unit",
@@ -180,6 +190,21 @@ class Check:
     minimum_fix: str = ""
 
 
+class ArtifactFreezeError(ValueError):
+    """Raised when a run cannot be safely frozen without changing evidence."""
+
+
+ARTIFACT_MANIFEST_NAME = "artifact_manifest.csv"
+ARTIFACT_ROLES = {"entry_script", "input_file", "output_table", "output_figure"}
+RUN_ARTIFACT_FIELDS = (
+    ("entry_script", "entry_script", False),
+    ("input_file", "input_files", True),
+    ("output_table", "output_tables", True),
+    ("output_figure", "output_figures", True),
+)
+NO_EXTERNAL_INPUT = "not_applicable"
+
+
 def rel(project: Path, path: Path) -> str:
     try:
         return str(path.relative_to(project))
@@ -202,6 +227,233 @@ def load_csv(path: Path) -> list[dict[str, str]]:
             return [dict(row) for row in csv.DictReader(f)]
     except Exception:
         return []
+
+
+def load_csv_strict(path: Path, headers: list[str]) -> list[dict[str, str]]:
+    if not path.exists():
+        return []
+    try:
+        with path.open("r", encoding="utf-8-sig", newline="") as handle:
+            reader = csv.DictReader(handle)
+            if reader.fieldnames != headers:
+                raise ArtifactFreezeError(
+                    f"Registry header mismatch for {path}: expected {headers}, got {reader.fieldnames}"
+                )
+            rows = [dict(row) for row in reader]
+    except ArtifactFreezeError:
+        raise
+    except (OSError, UnicodeError, csv.Error) as exc:
+        raise ArtifactFreezeError(f"Cannot read registry {path}: {exc}") from exc
+    if any(None in row for row in rows):
+        raise ArtifactFreezeError(f"Registry contains extra columns: {path}")
+    return rows
+
+
+def split_paths(value: str) -> list[str]:
+    return [part.strip() for part in re.split(r"[;,\n]+", value or "") if part.strip()]
+
+
+def safe_declared_file(project: Path, value: str) -> tuple[str, Path]:
+    raw = clean(value)
+    path = Path(raw)
+    if not raw or path.is_absolute() or ".." in path.parts:
+        raise ArtifactFreezeError(f"Artifact path must be a project-relative path without '..': {raw!r}")
+    relative = path.as_posix()
+    root = project.resolve()
+    candidate = root / path
+    try:
+        resolved = candidate.resolve(strict=True)
+        resolved.relative_to(root)
+    except (OSError, RuntimeError, ValueError) as exc:
+        raise ArtifactFreezeError(f"Artifact is missing or escapes the project: {relative}") from exc
+    if not resolved.is_file():
+        raise ArtifactFreezeError(f"Artifact is not a file: {relative}")
+    return relative, candidate
+
+
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def file_fingerprint(path: Path) -> tuple[str, str]:
+    try:
+        before = path.stat()
+        digest = file_sha256(path)
+        after = path.stat()
+    except OSError as exc:
+        raise ArtifactFreezeError(f"Cannot read artifact {path}: {exc}") from exc
+    identity_before = (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns)
+    identity_after = (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns)
+    if identity_before != identity_after:
+        raise ArtifactFreezeError(f"Artifact changed while hashing: {path}")
+    return digest, str(after.st_size)
+
+
+def artifact_id(run_id: str, role: str, relative_path: str) -> str:
+    identity = f"{run_id}\0{role}\0{relative_path}"
+    return f"ART-{hashlib.sha256(identity.encode('utf-8')).hexdigest()[:12].upper()}"
+
+
+def declared_run_artifacts(project: Path, run: dict[str, str]) -> list[tuple[str, str, Path]]:
+    declared: list[tuple[str, str, Path]] = []
+    seen: set[tuple[str, str]] = set()
+    for role, field_name, multiple in RUN_ARTIFACT_FIELDS:
+        raw_value = clean(run.get(field_name))
+        if field_name == "input_files":
+            if not raw_value:
+                raise ArtifactFreezeError(
+                    f"Completed run {clean(run.get('run_id'))!r} must list input_files or use {NO_EXTERNAL_INPUT!r}"
+                )
+            values = [] if raw_value.lower() == NO_EXTERNAL_INPUT else split_paths(raw_value)
+        else:
+            values = split_paths(raw_value) if multiple else [raw_value]
+        if not multiple and not values[0]:
+            raise ArtifactFreezeError(f"Completed run {clean(run.get('run_id'))!r} has no entry_script")
+        for value in values:
+            relative, path = safe_declared_file(project, value)
+            identity = (role, relative)
+            if identity not in seen:
+                declared.append((role, relative, path))
+                seen.add(identity)
+    return declared
+
+
+def has_reproduction_declaration(project: Path, run: dict[str, str]) -> bool:
+    input_files = clean(run.get("input_files"))
+    if not clean(run.get("command")) or not input_files:
+        return False
+    if input_files.lower() == NO_EXTERNAL_INPUT:
+        return True
+    try:
+        return bool(split_paths(input_files)) and all(
+            safe_declared_file(project, path) for path in split_paths(input_files)
+        )
+    except ArtifactFreezeError:
+        return False
+
+
+def validate_artifact_manifest_rows(rows: list[dict[str, str]]) -> None:
+    artifact_ids: set[str] = set()
+    identities: set[tuple[str, str, str]] = set()
+    for row in rows:
+        row_id = clean(row.get("artifact_id"))
+        run_id = clean(row.get("run_id"))
+        role = clean(row.get("role"))
+        path = clean(row.get("path"))
+        digest = clean(row.get("sha256")).lower()
+        size = clean(row.get("bytes"))
+        frozen_at = clean(row.get("frozen_at"))
+        status = clean(row.get("status")).lower()
+        if not row_id or not run_id or role not in ARTIFACT_ROLES or not path:
+            raise ArtifactFreezeError("Artifact manifest contains a row with missing or invalid identity fields")
+        lexical = Path(path)
+        if lexical.is_absolute() or ".." in lexical.parts or lexical.as_posix() != path:
+            raise ArtifactFreezeError(f"Artifact manifest contains an unsafe or non-normalized path: {path}")
+        if row_id != artifact_id(run_id, role, path):
+            raise ArtifactFreezeError(f"Artifact manifest has a non-deterministic artifact_id: {row_id}")
+        if not re.fullmatch(r"[0-9a-f]{64}", digest) or not size.isdigit() or not frozen_at or status != "frozen":
+            raise ArtifactFreezeError(f"Artifact manifest contains invalid hash, bytes, or status for {row_id}")
+        identity = (run_id, role, path)
+        if row_id in artifact_ids or identity in identities:
+            raise ArtifactFreezeError(f"Artifact manifest contains a duplicate identity: {run_id}:{role}:{path}")
+        artifact_ids.add(row_id)
+        identities.add(identity)
+
+
+def serialize_csv(headers: list[str], rows: list[dict[str, str]]) -> bytes:
+    buffer = io.StringIO(newline="")
+    writer = csv.DictWriter(buffer, fieldnames=headers)
+    writer.writeheader()
+    writer.writerows(rows)
+    return b"\xef\xbb\xbf" + buffer.getvalue().encode("utf-8")
+
+
+def atomic_write(path: Path, payload: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(payload)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+@contextmanager
+def artifact_manifest_lock(qc: Path) -> Iterator[None]:
+    lock_path = qc / ".artifact_manifest.lock"
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with lock_path.open("a+b") as handle:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+    except OSError as exc:
+        raise ArtifactFreezeError(f"Cannot lock artifact manifest {lock_path}: {exc}") from exc
+
+
+def freeze_run_artifacts(project: Path, run_id: str) -> list[dict[str, str]]:
+    project = project.expanduser().resolve()
+    qc = project / QC_REL
+    runs = load_csv_strict(qc / "run_record.csv", REGISTRY_HEADERS["run_record.csv"])
+    matches = [row for row in runs if clean(row.get("run_id")) == clean(run_id)]
+    if len(matches) != 1:
+        raise ArtifactFreezeError(f"Expected exactly one run_record row for {run_id!r}, found {len(matches)}")
+    run = matches[0]
+    if clean(run.get("run_status")).lower() != "completed":
+        raise ArtifactFreezeError(f"Run {run_id!r} is not completed")
+    if not clean(run.get("command")):
+        raise ArtifactFreezeError(f"Completed run {run_id!r} has no reproducible command")
+
+    manifest_path = qc / ARTIFACT_MANIFEST_NAME
+    headers = REGISTRY_HEADERS[ARTIFACT_MANIFEST_NAME]
+    with artifact_manifest_lock(qc):
+        declared = declared_run_artifacts(project, run)
+        existing = load_csv_strict(manifest_path, headers)
+        validate_artifact_manifest_rows(existing)
+        previous = {
+            (clean(row.get("role")), clean(row.get("path"))): row
+            for row in existing
+            if clean(row.get("run_id")) == clean(run_id)
+        }
+        frozen_at = datetime.now().astimezone().isoformat(timespec="seconds")
+        frozen_rows: list[dict[str, str]] = []
+        for role, relative, path in declared:
+            digest, size = file_fingerprint(path)
+            prior = previous.get((role, relative), {})
+            unchanged = (
+                clean(prior.get("sha256")).lower() == digest
+                and clean(prior.get("bytes")) == size
+                and clean(prior.get("status")).lower() == "frozen"
+            )
+            frozen_rows.append({
+                "artifact_id": artifact_id(clean(run_id), role, relative),
+                "run_id": clean(run_id),
+                "role": role,
+                "path": relative,
+                "sha256": digest,
+                "bytes": size,
+                "frozen_at": clean(prior.get("frozen_at")) if unchanged else frozen_at,
+                "status": "frozen",
+                "notes": clean(prior.get("notes")),
+            })
+        combined = [row for row in existing if clean(row.get("run_id")) != clean(run_id)] + frozen_rows
+        combined.sort(key=lambda row: (clean(row.get("run_id")), clean(row.get("role")), clean(row.get("path"))))
+        validate_artifact_manifest_rows(combined)
+        try:
+            atomic_write(manifest_path, serialize_csv(headers, combined))
+        except OSError as exc:
+            raise ArtifactFreezeError(f"Cannot atomically update {manifest_path}: {exc}") from exc
+        return [row for row in combined if clean(row.get("run_id")) == clean(run_id)]
 
 
 def write_csv_template(path: Path, headers: list[str], force: bool) -> None:
@@ -271,6 +523,105 @@ def path_exists_from_project(project: Path, value: str) -> bool:
     except (OSError, RuntimeError, ValueError):
         return False
     return resolved.is_file()
+
+
+def check_artifact_integrity(
+    project: Path,
+    runs: list[dict[str, str]],
+    results: list[dict[str, str]],
+    figures: list[dict[str, str]],
+    completed_runs: set[str],
+) -> tuple[bool, str, str]:
+    paper_results = [
+        row for row in results
+        if clean(row.get("validation_status")).lower() == "paper_ready"
+        and clean(row.get("run_id")) in completed_runs
+    ]
+    paper_figures = [
+        row for row in figures
+        if clean(row.get("validation_status")).lower() == "paper_ready"
+        and clean(row.get("run_id")) in completed_runs
+    ]
+    supporting_run_ids = sorted({
+        clean(row.get("run_id")) for row in paper_results + paper_figures if clean(row.get("run_id"))
+    })
+    if not supporting_run_ids:
+        return False, "没有支撑 paper_ready 证据的 completed run 可供完整性核验", "supporting_runs=none"
+
+    manifest_path = project / QC_REL / ARTIFACT_MANIFEST_NAME
+    try:
+        manifest = load_csv_strict(manifest_path, REGISTRY_HEADERS[ARTIFACT_MANIFEST_NAME])
+        validate_artifact_manifest_rows(manifest)
+    except ArtifactFreezeError as exc:
+        return False, "产物冻结清单缺失或 schema 无效", str(exc)
+
+    issues: list[str] = []
+    verified_count = 0
+    for run_id in supporting_run_ids:
+        run_rows = [row for row in runs if clean(row.get("run_id")) == run_id]
+        if len(run_rows) != 1:
+            issues.append(f"{run_id}:run_record_count={len(run_rows)}")
+            continue
+        try:
+            declared = declared_run_artifacts(project, run_rows[0])
+        except ArtifactFreezeError as exc:
+            issues.append(f"{run_id}:{exc}")
+            continue
+
+        expected = {(role, relative): path for role, relative, path in declared}
+        frozen_rows = [row for row in manifest if clean(row.get("run_id")) == run_id]
+        frozen = {(clean(row.get("role")), clean(row.get("path"))): row for row in frozen_rows}
+        missing = sorted(set(expected) - set(frozen))
+        extra = sorted(set(frozen) - set(expected))
+        issues.extend(f"{run_id}:missing:{role}:{path}" for role, path in missing)
+        issues.extend(f"{run_id}:undeclared:{role}:{path}" for role, path in extra)
+
+        for identity in sorted(set(expected) & set(frozen)):
+            role, relative = identity
+            path = expected[identity]
+            try:
+                current_digest, current_size = file_fingerprint(path)
+            except ArtifactFreezeError as exc:
+                issues.append(f"{run_id}:unreadable:{relative}:{exc}")
+                continue
+            row = frozen[identity]
+            if clean(row.get("sha256")).lower() != current_digest or clean(row.get("bytes")) != current_size:
+                issues.append(f"{run_id}:drift:{role}:{relative}")
+            else:
+                verified_count += 1
+
+        entry_paths = {path for role, path in expected if role == "entry_script"}
+        input_paths = {path for role, path in expected if role == "input_file"}
+        table_paths = {path for role, path in expected if role == "output_table"}
+        figure_paths = {path for role, path in expected if role == "output_figure"}
+        for row in paper_results:
+            if clean(row.get("run_id")) != run_id:
+                continue
+            try:
+                source_script, _ = safe_declared_file(project, clean(row.get("source_script")))
+                source_table, _ = safe_declared_file(project, clean(row.get("source_table")))
+            except ArtifactFreezeError as exc:
+                issues.append(f"{run_id}:paper_result_reference:{exc}")
+                continue
+            if source_script not in entry_paths | input_paths:
+                issues.append(f"{run_id}:source_script_not_frozen:{source_script}")
+            if source_table not in table_paths:
+                issues.append(f"{run_id}:source_table_not_output:{source_table}")
+        for row in paper_figures:
+            if clean(row.get("run_id")) != run_id:
+                continue
+            try:
+                figure_path, _ = safe_declared_file(project, clean(row.get("figure_path")))
+            except ArtifactFreezeError as exc:
+                issues.append(f"{run_id}:paper_figure_reference:{exc}")
+                continue
+            if figure_path not in figure_paths:
+                issues.append(f"{run_id}:figure_not_output:{figure_path}")
+
+    if issues:
+        return False, f"冻结产物存在 {len(issues)} 个缺失、漂移或 run 关联问题", "; ".join(issues)
+    evidence = f"{rel(project, manifest_path)}; runs={','.join(supporting_run_ids)}; artifacts={verified_count}"
+    return True, f"{len(supporting_run_ids)} 个 paper-ready 支撑 run 的 {verified_count} 个产物哈希一致", evidence
 
 
 def evaluate(project: Path, phase: str) -> dict[str, Any]:
@@ -360,13 +711,14 @@ def evaluate(project: Path, phase: str) -> dict[str, Any]:
             r for r in runs
             if clean(r.get("run_status")).lower() == "completed"
             and clean(r.get("run_id"))
+            and has_reproduction_declaration(project, r)
             and path_exists_from_project(project, clean(r.get("entry_script")))
         ]
         completed_runs = {clean(r.get("run_id")) for r in completed_run_rows}
         add(
             "reproducible_run", "model", "pass" if completed_runs else "fail",
-            f"存在 {len(completed_runs)} 个完成且入口脚本可定位的可复现运行" if completed_runs else "缺少 run_status=completed 且 entry_script 可定位的正式运行记录",
-            rel(project, runs_path), "记录命令、入口脚本、输入、参数、seed、输出和 run_id。",
+            f"存在 {len(completed_runs)} 个命令、输入声明和入口脚本完整的可复现运行" if completed_runs else "缺少 run_status=completed 且命令、输入声明、entry_script 完整的正式运行记录",
+            rel(project, runs_path), f"记录命令、入口脚本、输入、参数、seed、输出和 run_id；无外部输入时填写 {NO_EXTERNAL_INPUT}。",
         )
 
         result_path = qc / "result_registry.csv"
@@ -407,6 +759,14 @@ def evaluate(project: Path, phase: str) -> dict[str, Any]:
             and path_exists_from_project(project, clean(r.get("figure_path")))
         ]
         figure_ids = {clean(r.get("figure_id")) for r in ready_figure_rows}
+        integrity_ok, integrity_message, integrity_evidence = check_artifact_integrity(
+            project, runs, results, figures, completed_runs,
+        )
+        add(
+            "artifact_integrity", "final", "pass" if integrity_ok else "fail",
+            integrity_message, integrity_evidence,
+            "对支撑论文证据的 completed run 执行 --freeze-run，并在代码、输入或输出变化后重新审核和冻结。",
+        )
         claims_path = qc / "claim_ledger.csv"
         claims = load_csv(claims_path)
         paper_claims = [r for r in claims if clean(r.get("status")).lower() == "paper_ready"]
@@ -533,6 +893,7 @@ def main() -> int:
     parser.add_argument("project", help="Modeling project directory")
     parser.add_argument("--init", action="store_true", help="Create non-destructive QC registries and templates")
     parser.add_argument("--force-templates", action="store_true", help="Overwrite only QC templates/headers; never delete project data")
+    parser.add_argument("--freeze-run", metavar="RUN_ID", help="Freeze declared artifacts for one completed run without executing it")
     parser.add_argument("--phase", choices=("early", "model", "final"), default="final")
     parser.add_argument("--strict", action="store_true", help="Exit non-zero unless the selected phase is ready")
     args = parser.parse_args()
@@ -543,6 +904,13 @@ def main() -> int:
     if args.init:
         files = init_project(project, force=args.force_templates)
         print(f"QC templates: {len(files)} files under {project / QC_REL}")
+    if args.freeze_run:
+        try:
+            frozen = freeze_run_artifacts(project, args.freeze_run)
+        except ArtifactFreezeError as exc:
+            print(f"Cannot freeze run {args.freeze_run}: {exc}", file=sys.stderr)
+            return 2
+        print(f"Frozen run {args.freeze_run}: {len(frozen)} artifacts -> {project / QC_REL / ARTIFACT_MANIFEST_NAME}")
     summary = evaluate(project, args.phase)
     json_path, md_path = write_outputs(project, summary)
     print(f"Contest QC ({args.phase}): {summary['readiness']}")

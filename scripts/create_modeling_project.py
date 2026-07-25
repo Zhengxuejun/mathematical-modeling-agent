@@ -96,10 +96,13 @@ python 02_代码/14_competition_evidence.py
 python 02_代码/19_candidate_solution_tree.py init --objective-metric objective --direction maximize
 python 02_代码/18_contest_evidence_sync.py --dry-run
 python 02_代码/18_contest_evidence_sync.py
-python 02_代码/17_contest_qc.py --phase final
+# 将 R1 替换为 run_record.csv 中支撑论文证据的正式 run_id
+python 02_代码/17_contest_qc.py --freeze-run R1 --phase final --strict
 python 02_代码/13_competition_readiness.py
 python 02_代码/08_pipeline.py --zip
 ```
+
+正式 run 必须填写非空 `command` 和明确 `input_files`；确实没有外部输入时填写 `not_applicable`。冻结不会执行记录命令，文件变化后必须重跑、重审并重新冻结。
 
 ## 最终打包
 

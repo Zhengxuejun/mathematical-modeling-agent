@@ -73,7 +73,11 @@ python 02_代码/03_model_main.py
 python 02_代码/04_sensitivity.py
 python 02_代码/05_make_figures.py
 python 02_代码/19_candidate_solution_tree.py init --objective-metric objective --direction maximize
+# 正式 run 审核完成后，将 R1 替换为真实 run_id
+python 02_代码/17_contest_qc.py --freeze-run R1 --phase final --strict
 ```
+
+正式 run 必须填写非空 `command` 和明确 `input_files`；确实没有外部输入时填写 `not_applicable`。冻结命令不会执行运行记录中的命令；它只记录正式 run 所声明入口、输入、结果表和图表的 SHA256。冻结后的文件如有变化，必须重跑、重审并再次显式冻结，不能直接沿用旧 `paper_ready` 状态。
 
 ## 6. 关键结果
 

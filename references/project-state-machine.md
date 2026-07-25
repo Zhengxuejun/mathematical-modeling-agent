@@ -83,7 +83,7 @@ S8 最终提交包完成
 完成判据：`submission_manifest.json` 使用当前支持的 schema，明确标记 `package_valid=true`，不存在失败检查；manifest 文件清单全部存在且路径不越出提交包；`SHA256SUMS.txt` 对清单中每个文件的校验均通过。  
 禁止：桌面散落文件、不知道最终版本在哪里。
 
-S8 是经过验证的工程交付状态，不是“控制文件存在”状态。打包失败时不得覆盖上一份有效提交包，重复打包不得保留上一轮已禁用的代码、原始数据或旧报告。S8 也不证明数学模型必然正确，更不保证获奖；正式参赛还必须通过 `contest_qc_gate.py --phase final` 与 competition-readiness 门禁。
+S8 是经过验证的工程交付状态，不是“控制文件存在”状态。打包失败时不得覆盖上一份有效提交包，重复打包不得保留上一轮已禁用的代码、原始数据或旧报告。S8 也不证明数学模型必然正确，更不保证获奖；正式参赛还必须先冻结支撑 paper-ready 证据的 completed run，再通过 `contest_qc_gate.py --phase final` 与 competition-readiness 门禁。
 
 ## 3. 状态转移规则
 

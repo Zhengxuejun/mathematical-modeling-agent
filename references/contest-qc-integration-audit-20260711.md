@@ -6,12 +6,12 @@ Use when evaluating or extending the umbrella skill's competition-grade evidence
 
 ## Durable finding
 
-The skill already contains `scripts/contest_qc_gate.py`: a compact executable evidence gate with 12 registries under `06_过程记录/竞赛质控/` and `early`, `model`, `final` phases. Prefer wiring and hardening this single gate over importing the candidate suite's 17 role-specific skills.
+The skill already contains `scripts/contest_qc_gate.py`: a compact executable evidence gate with 13 registries under `06_过程记录/竞赛质控/` and `early`, `model`, `final` phases. Prefer wiring and hardening this single gate over importing the candidate suite's 17 role-specific skills.
 
 Core registries already covered:
 
 - scope/model: `deliverable_matrix.csv`, `symbol_table.csv`, `assumption_log.csv`, `model_handoff.md`;
-- execution: `poc_registry.csv`, `math_verification.csv`, `run_record.csv`, `result_registry.csv`, `figure_evidence.csv`;
+- execution: `poc_registry.csv`, `math_verification.csv`, `run_record.csv`, `artifact_manifest.csv`, `result_registry.csv`, `figure_evidence.csv`;
 - paper/final: `claim_ledger.csv`, `consistency_audit.csv`, `review_findings.csv`, `review_pass_items.csv`, `submission_checklist.md`.
 
 ## Integration checklist
@@ -32,6 +32,7 @@ The integration now enforces these deterministic checks:
 - A paper-ready figure requires run linkage, caption, post-figure conclusion, existing figure path, and render or human visual pass.
 - Open P0/P1 review findings, failed/blocked mathematical checks, open high-risk consistency rows, unsupported paper claims, or missing current rule/anonymity/reproducibility/AI-disclosure state block `final_ready`.
 - `competition_readiness_gate.as_bool()` treats an explicit false/template/warn status as authoritative; non-empty paths or metadata cannot upgrade it to pass.
+- `--freeze-run` hashes a completed run's declared entry, inputs, result tables, and figures without executing its command. Final QC fails closed when the manifest is absent, malformed, stale, or inconsistent with paper-ready result/figure linkage.
 
 ## Remaining boundary
 
@@ -39,7 +40,7 @@ The integration now enforces these deterministic checks:
 
 ## Regression tests
 
-Use temp-project fixtures to test: scaffold creates wrappers/registries; early lock pass; missing real-data PoC or broken script/run/result reference blocks model phase; unsupported paper claim/P1/compliance gap blocks final phase; a complete minimal fixture passes; explicit non-pass evidence cannot bypass readiness; pipeline and readiness cannot bypass QC `blocked`.
+Use temp-project fixtures to test: scaffold creates wrappers/registries; early lock pass; missing real-data PoC or broken script/run/result reference blocks model phase; unsupported paper claim/P1/compliance gap blocks final phase; a complete minimal fixture passes; entry/input/table/figure hash drift blocks final phase; explicit non-pass evidence cannot bypass readiness; pipeline and readiness cannot bypass QC `blocked`.
 
 ## Candidate-suite triage lessons
 
