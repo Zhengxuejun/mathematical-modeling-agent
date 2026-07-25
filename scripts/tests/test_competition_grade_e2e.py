@@ -108,6 +108,7 @@ def test_full_competition_pipeline_publishes_latest_verified_report(tmp_path: Pa
     assert (package / "report_draft.md").read_bytes() == expected_report
     summary = json.loads((project / "06_过程记录/pipeline/pipeline_run_summary.json").read_text(encoding="utf-8"))
     assert summary["recommended_status"] == "completed"
+    assert summary["current_package_published"] is True
     assert summary["contest_qc_readiness"] == "final_ready"
     assert summary["competition_ready"] is True
     assert summary["evidence_sync_status"] == "candidates_synced"
@@ -152,6 +153,50 @@ def test_open_p1_risk_blocks_finalizer_and_new_manifest(tmp_path: Path) -> None:
     assert not (project / "07_提交包/submission_manifest.json").exists()
     summary = json.loads((project / "06_过程记录/pipeline/pipeline_run_summary.json").read_text(encoding="utf-8"))
     assert summary["contest_qc_readiness"] == "blocked"
+    finalize = next(step for step in summary["steps"] if step["name"] == "finalize")
+    assert finalize["skipped"]
+    assert "contest QC is not final_ready" in finalize["reason"]
+
+
+def test_previous_s8_does_not_make_blocked_rerun_completed(tmp_path: Path) -> None:
+    project = make_competition_project(tmp_path)
+    command = [
+        sys.executable,
+        str(SCRIPT_DIR / "modeling_pipeline.py"),
+        str(project),
+        "--entry",
+        "02_代码/solve.py",
+        "--report",
+        "05_报告定稿/report_draft.md",
+    ]
+
+    first = subprocess.run(command, text=True, capture_output=True, timeout=60)
+    assert first.returncode == 0, first.stdout + "\n" + first.stderr
+    old_manifest = (project / "07_提交包/submission_manifest.json").read_bytes()
+
+    write_rows(project / "06_过程记录/竞赛质控/review_findings.csv", [{
+        "finding_id": "F1",
+        "severity": "P1",
+        "dimension": "evidence",
+        "score_risk": "major",
+        "artifact": "claim_ledger.csv",
+        "location": "C1",
+        "issue": "claim lacks independent verification",
+        "impact": "submission claim is unsafe",
+        "minimum_fix": "add verification",
+        "owner": "model",
+        "status": "open",
+    }])
+
+    second = subprocess.run(command, text=True, capture_output=True, timeout=60)
+
+    assert second.returncode == 1
+    assert (project / "07_提交包/submission_manifest.json").read_bytes() == old_manifest
+    summary = json.loads((project / "06_过程记录/pipeline/pipeline_run_summary.json").read_text(encoding="utf-8"))
+    assert summary["recommended_status"] == "blocked"
+    assert summary["current_package_published"] is False
+    assert summary["final_package"] == ""
+    assert summary["finalize_counts"] == {"fail": 0, "warn": 0, "total": 0}
     finalize = next(step for step in summary["steps"] if step["name"] == "finalize")
     assert finalize["skipped"]
     assert "contest QC is not final_ready" in finalize["reason"]

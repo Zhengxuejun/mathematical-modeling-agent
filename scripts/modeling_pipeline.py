@@ -106,7 +106,12 @@ def read_json(path: Path) -> dict:
 
 
 def status_from_steps(
-    steps: list[StepResult], highest_contiguous_state: str | None, skeleton_only: bool
+    steps: list[StepResult],
+    highest_contiguous_state: str | None,
+    skeleton_only: bool,
+    *,
+    current_package_published: bool = False,
+    finalize_blocked: bool = False,
 ) -> tuple[str, int, int]:
     """Report step health without overstating project completion.
 
@@ -117,10 +122,12 @@ def status_from_steps(
     warnings = 0
     if failures:
         return "failed", failures, warnings
-    if highest_contiguous_state == "S8":
-        return "completed", failures, warnings
     if skeleton_only:
         return "early_stage_passed", failures, warnings
+    if finalize_blocked:
+        return "blocked", failures, warnings
+    if current_package_published and highest_contiguous_state == "S8":
+        return "completed", failures, warnings
     return "in_progress", failures, warnings
 
 
@@ -163,6 +170,7 @@ def write_summary(project: Path, summary: dict) -> tuple[Path, Path]:
     lines.append(f"项目：`{summary['project']}`\n\n")
     lines.append(f"推荐状态：**{summary['recommended_status']}**\n\n")
     lines.append(f"最高连续状态：`{summary.get('highest_contiguous_state', 'unknown')}`\n\n")
+    lines.append(f"本轮已发布当前提交包：`{summary.get('current_package_published', False)}`\n\n")
     lines.append("## 步骤结果\n\n")
     lines.append("| 步骤 | 状态 | exit_code | 用时(s) | 命令/说明 |\n|---|---|---:|---:|---|\n")
     for s in summary["steps"]:
@@ -414,7 +422,8 @@ def main() -> int:
             steps, pre_meta.get("highest_contiguous_state"), args.skeleton_only
         )[0],
         "highest_contiguous_state": pre_meta.get("highest_contiguous_state"),
-        "final_package": str(project / "07_提交包") if (project / "07_提交包").exists() else "",
+        "current_package_published": False,
+        "final_package": "",
         "entry": args.entry,
         "strict": args.strict,
         "strict_numbers": args.strict_numbers,
@@ -518,7 +527,21 @@ def main() -> int:
     contest_qc_summary = read_json(project / "06_过程记录" / "竞赛质控" / "contest_qc_gate.json")
     repair_summary = read_json(project / "06_过程记录" / "修复建议" / "repair_advice.json")
     competition_summary = read_json(project / "06_过程记录" / "竞赛就绪度" / "competition_readiness.json")
-    manifest = read_json(project / "07_提交包" / "submission_manifest.json")
+    finalize_step = next((step for step in steps if step.name == "finalize"), None)
+    current_package_published = bool(
+        finalize_step and not finalize_step.skipped and finalize_step.exit_code == 0
+    )
+    finalize_blocked = bool(
+        not args.skeleton_only
+        and not args.skip_finalize
+        and finalize_step
+        and finalize_step.skipped
+    )
+    manifest = (
+        read_json(project / "07_提交包" / "submission_manifest.json")
+        if current_package_published
+        else {}
+    )
     meta = read_json(project / "project_meta.json")
 
     fail_steps = [s for s in steps if not s.skipped and s.exit_code != 0]
@@ -535,7 +558,11 @@ def main() -> int:
     finalize_fail = sum(1 for c in finalize_checks if c.get("status") == "fail")
     finalize_warn = sum(1 for c in finalize_checks if c.get("status") == "warn")
     recommended_status, _, _ = status_from_steps(
-        steps, meta.get("highest_contiguous_state"), args.skeleton_only
+        steps,
+        meta.get("highest_contiguous_state"),
+        args.skeleton_only,
+        current_package_published=current_package_published,
+        finalize_blocked=finalize_blocked,
     )
 
     summary = {
@@ -544,7 +571,8 @@ def main() -> int:
         "project": str(project),
         "recommended_status": recommended_status,
         "highest_contiguous_state": meta.get("highest_contiguous_state"),
-        "final_package": str(project / "07_提交包") if (project / "07_提交包").exists() else "",
+        "current_package_published": current_package_published,
+        "final_package": str(project / "07_提交包") if current_package_published else "",
         "entry": args.entry,
         "strict": args.strict,
         "strict_numbers": args.strict_numbers,
@@ -573,11 +601,6 @@ def main() -> int:
     print(f"Pipeline json: {json_path}")
     print(f"Recommended status: {recommended_status}")
     print(f"Highest contiguous state: {summary.get('highest_contiguous_state')}")
-    finalize_blocked = (
-        not args.skeleton_only
-        and not args.skip_finalize
-        and any(step.name == "finalize" and step.skipped for step in steps)
-    )
     if fail_steps or finalize_blocked:
         print("Failed steps:")
         for s in fail_steps:
