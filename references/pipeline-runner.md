@@ -108,6 +108,8 @@ python 02_代码/08_pipeline.py --report 05_报告定稿/report.md --zip
 
 跳过只应用于调试或局部检查，正式提交前不建议跳过。
 
+`competition_readiness` 依赖本轮已完成的 Contest QC。任一已执行前序步骤失败，或本轮 Contest QC 被跳过时，Pipeline 会跳过 readiness；显式跳过或 readiness 子进程失败时也不会读取历史 `competition_readiness.json`。这些分支在本轮摘要中统一为 `competition_readiness=null`、`competition_ready=false`、`competition_counts={}`。
+
 ## 5. 输出文件
 
 Pipeline 会生成：
@@ -181,6 +183,8 @@ recommended_status = completed
 - 前序证据缺失，例如 baseline/sensitivity 结果文件命名不符合状态机规则；
 - 用户主动 `--skip-finalize`；
 - 项目还不是完整提交态，只是局部检查通过。
+
+同理，固定路径下存在上一轮 `competition_readiness.json` 只代表历史评估。Pipeline 最终摘要与打包判定只采信本轮未跳过且退出成功的 readiness 步骤；本轮没有可信结果时布尔值必须 fail-closed 为 false。
 
 ## 8. 注意事项
 

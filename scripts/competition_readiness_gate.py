@@ -216,9 +216,19 @@ def assess(project: Path) -> dict[str, Any]:
         f"reports={len(reports)}",
     ))
     if pipeline:
+        pipeline_status = pipeline.get("recommended_status")
+        pipeline_phase = pipeline.get("phase")
+        if pipeline_status == "completed" or (
+            pipeline_phase == "pre_finalize" and pipeline_status == "in_progress"
+        ):
+            check_status = "pass"
+        elif pipeline_status in {"failed", "blocked"}:
+            check_status = "fail"
+        else:
+            check_status = "warn"
         checks.append(Check(
-            "pipeline_status", "workflow", "pass" if pipeline.get("recommended_status") == "completed" else "warn",
-            f"pipeline recommended_status={pipeline.get('recommended_status')}",
+            "pipeline_status", "workflow", check_status,
+            f"pipeline phase={pipeline_phase}, recommended_status={pipeline_status}",
             "06_过程记录/pipeline/pipeline_run_summary.json",
         ))
 

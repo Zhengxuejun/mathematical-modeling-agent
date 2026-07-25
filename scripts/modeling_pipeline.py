@@ -105,6 +105,17 @@ def read_json(path: Path) -> dict:
         return {}
 
 
+def current_competition_summary(step: StepResult, path: Path) -> dict:
+    """Return only a fail-closed readiness result produced by this pipeline step."""
+    if step.skipped or step.exit_code != 0:
+        return {}
+    summary = read_json(path)
+    competition_ready = summary.get("competition_ready")
+    if isinstance(competition_ready, bool):
+        return summary
+    return {}
+
+
 def status_from_steps(
     steps: list[StepResult],
     highest_contiguous_state: str | None,
@@ -208,7 +219,7 @@ def write_summary(project: Path, summary: dict) -> tuple[Path, Path]:
     lines.append(f"- 证据候选同步：status={summary.get('evidence_sync_status', 'NA')} discovered={evidence_sync_counts.get('discovered', 'NA')} added={evidence_sync_counts.get('added', 'NA')} updated={evidence_sync_counts.get('updated', 'NA')} conflicts={evidence_sync_counts.get('conflicts', 'NA')}\n")
     lines.append(f"- 竞赛质控：readiness={summary.get('contest_qc_readiness', 'NA')} pass={contest_qc_counts.get('pass', 'NA')} warn={contest_qc_counts.get('warn', 'NA')} fail={contest_qc_counts.get('fail', 'NA')}\n")
     lines.append(f"- 修复建议：delivery_readiness={summary.get('delivery_readiness', 'NA')} advice={repair_counts.get('advice_items', 'NA')} warn={repair_counts.get('warn', 'NA')} fail={repair_counts.get('fail', 'NA')}\n")
-    lines.append(f"- 竞赛就绪度：readiness={summary.get('competition_readiness', 'NA')} workflow_fail={competition_counts.get('workflow', {}).get('fail', 'NA')} model_fail={competition_counts.get('model', {}).get('fail', 'NA')} competition_warn={competition_counts.get('competition', {}).get('warn', 'NA')} competition_fail={competition_counts.get('competition', {}).get('fail', 'NA')}\n")
+    lines.append(f"- 竞赛就绪度：readiness={summary.get('competition_readiness') or 'not_evaluated'} workflow_fail={competition_counts.get('workflow', {}).get('fail', 'NA')} model_fail={competition_counts.get('model', {}).get('fail', 'NA')} competition_warn={competition_counts.get('competition', {}).get('warn', 'NA')} competition_fail={competition_counts.get('competition', {}).get('fail', 'NA')}\n")
     lines.append(f"- 最终打包检查：warn={finalize_counts.get('warn', 'NA')} fail={finalize_counts.get('fail', 'NA')}\n")
     if summary.get("final_package"):
         lines.append(f"- 提交包目录：`{summary['final_package']}`\n")
@@ -465,16 +476,38 @@ def main() -> int:
             cmd.append("--strict")
         steps.append(run_command("repair_advisor", cmd, project, timeout=args.timeout))
 
+    competition_path = project / "06_过程记录" / "竞赛就绪度" / "competition_readiness.json"
+    predecessor_failures = [
+        step.name for step in steps if not step.skipped and step.exit_code != 0
+    ]
+    contest_qc_step = next((step for step in steps if step.name == "contest_qc"), None)
     if args.skip_competition_readiness:
-        steps.append(skipped_step("competition_readiness", [py, str(COMPETITION_SCRIPT), str(project)], "--skip-competition-readiness"))
+        competition_step = skipped_step(
+            "competition_readiness",
+            [py, str(COMPETITION_SCRIPT), str(project)],
+            "--skip-competition-readiness",
+        )
+    elif predecessor_failures:
+        competition_step = skipped_step(
+            "competition_readiness",
+            [py, str(COMPETITION_SCRIPT), str(project)],
+            "failed predecessor steps: " + ", ".join(predecessor_failures),
+        )
+    elif contest_qc_step is None or contest_qc_step.skipped:
+        competition_step = skipped_step(
+            "competition_readiness",
+            [py, str(COMPETITION_SCRIPT), str(project)],
+            "required predecessor step not completed: contest_qc",
+        )
     else:
         cmd = [py, str(COMPETITION_SCRIPT), str(project)]
         if args.strict_competition_readiness:
             cmd.append("--strict")
-        steps.append(run_command("competition_readiness", cmd, project, timeout=args.timeout))
+        competition_step = run_command("competition_readiness", cmd, project, timeout=args.timeout)
+    steps.append(competition_step)
+    competition_summary = current_competition_summary(competition_step, competition_path)
 
     contest_qc_for_package = read_json(project / "06_过程记录" / "竞赛质控" / "contest_qc_gate.json")
-    competition_for_package = read_json(project / "06_过程记录" / "竞赛就绪度" / "competition_readiness.json")
     blocking_reasons = [
         f"required step failed: {step.name}"
         for step in steps
@@ -490,7 +523,7 @@ def main() -> int:
         blocking_reasons.append("contest QC is not final_ready")
     if args.skip_competition_readiness:
         blocking_reasons.append("final packaging requires competition readiness")
-    elif competition_for_package.get("competition_ready") is not True:
+    elif competition_summary.get("competition_ready") is not True:
         blocking_reasons.append("competition readiness is not competition_ready")
 
     finalize_cmd = [py, str(FINALIZE_SCRIPT), str(project), "--entry", args.entry]
@@ -526,7 +559,6 @@ def main() -> int:
     evidence_sync_summary = read_json(project / "06_过程记录" / "竞赛质控" / "evidence_sync.json")
     contest_qc_summary = read_json(project / "06_过程记录" / "竞赛质控" / "contest_qc_gate.json")
     repair_summary = read_json(project / "06_过程记录" / "修复建议" / "repair_advice.json")
-    competition_summary = read_json(project / "06_过程记录" / "竞赛就绪度" / "competition_readiness.json")
     finalize_step = next((step for step in steps if step.name == "finalize"), None)
     current_package_published = bool(
         finalize_step and not finalize_step.skipped and finalize_step.exit_code == 0
@@ -553,7 +585,7 @@ def main() -> int:
     evidence_sync_counts = {} if args.skip_contest_evidence_sync else (evidence_sync_summary.get("counts", {}) if isinstance(evidence_sync_summary, dict) else {})
     contest_qc_counts = {} if args.skip_contest_qc else (contest_qc_summary.get("counts", {}) if isinstance(contest_qc_summary, dict) else {})
     repair_counts = {} if args.skip_repair_advisor else (repair_summary.get("counts", {}) if isinstance(repair_summary, dict) else {})
-    competition_counts = {} if args.skip_competition_readiness else (competition_summary.get("counts", {}) if isinstance(competition_summary, dict) else {})
+    competition_counts = competition_summary.get("counts", {})
     finalize_checks = manifest.get("checks", []) if isinstance(manifest, dict) else []
     finalize_fail = sum(1 for c in finalize_checks if c.get("status") == "fail")
     finalize_warn = sum(1 for c in finalize_checks if c.get("status") == "warn")
@@ -591,8 +623,8 @@ def main() -> int:
         "repair_counts": repair_counts,
         "delivery_readiness": repair_summary.get("delivery_readiness") if isinstance(repair_summary, dict) else None,
         "competition_counts": competition_counts,
-        "competition_readiness": competition_summary.get("readiness") if isinstance(competition_summary, dict) else None,
-        "competition_ready": competition_summary.get("competition_ready") if isinstance(competition_summary, dict) else None,
+        "competition_readiness": competition_summary.get("readiness"),
+        "competition_ready": competition_summary.get("competition_ready") is True,
         "finalize_counts": {"fail": finalize_fail, "warn": finalize_warn, "total": len(finalize_checks)},
     }
     json_path, md_path = write_summary(project, summary)

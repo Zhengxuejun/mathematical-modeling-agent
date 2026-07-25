@@ -528,3 +528,17 @@ final 门禁只对支撑 `paper_ready` 结果/图表的 completed run 强制完�
 已修复“空 `result_id` 与空 `evidence_id` 可以互相匹配，使没有真实证据身份的论文主张保持 `final_ready`”的追溯绕过。
 
 final 门禁现在要求所有 `paper_ready` 的 `result_id`、`figure_id`、`claim_id` 非空且在各自登记表中唯一；每条主张必须声明 `evidence_type=result|figure`，并在对应类型的 ID 命名空间中解析。空 ID、重复 ID、未知引用、空类型或跨类型引用都会 fail-closed。该检查只验证身份和引用契约，不解析结果表数值，也不把候选证据自动提升为论文证据。
+
+## 24. 当前已实现：Pipeline 本轮竞赛就绪度隔离
+
+已修复“项目上一轮为 `competition_ready=true`，本轮前序失败或跳过 readiness 后仍在摘要中保留旧 true”的状态漂移。
+
+新口径：
+
+- 任一未跳过前序步骤失败时，不再运行依赖其结果的 competition readiness；
+- 本轮 Contest QC 未完成时，不运行 readiness；
+- 打包判断和最终摘要只读取一次本轮 readiness 步骤结果；
+- readiness 被跳过或退出非零时，`competition_readiness=null`、`competition_ready=false`、`competition_counts={}`；
+- 独立 readiness 读取到明确 `failed/blocked` 的 Pipeline 摘要时，将其作为 workflow fail，而不是可容忍 warning。
+
+端到端回归覆盖“首轮成功后 data audit 退出 7”“首轮成功后显式跳过 readiness”“首轮成功后显式跳过 Contest QC”，并用单元回归锁定 readiness 子进程失败不能复用旧 true。

@@ -120,7 +120,7 @@ python 02_代码/17_contest_qc.py --freeze-run R1 --phase final --strict
 
 ## 常见判定
 
-- `workflow_blocked`：材料/解析/结果/报告链路不完整。
+- `workflow_blocked`：材料/解析/结果/报告链路不完整，或当前 Pipeline 摘要明确为 `failed`/`blocked`。
 - `model_not_ready`：有项目文件，但仍是 placeholder 或缺领域模型/checker。
 - `competition_needs_review`：模型能跑，但验证、对比、风险、论文资产不足。
 - `competition_ready`：工程、模型、验证、论文均达到最低参赛可信标准。
