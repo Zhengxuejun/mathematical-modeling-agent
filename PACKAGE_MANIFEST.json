@@ -1,7 +1,7 @@
 {
   "name": "mathematical-modeling-agent",
   "version": "1.3.0",
-  "created_at": "2026-07-12T23:58:31",
+  "created_at": "2026-07-25T21:47:24",
   "distribution": "portable Hermes skill package",
   "file_count": 158,
   "excluded": [
@@ -44,13 +44,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 6808,
-      "sha256": "8bf8f56c6190920aef1291eabff9d99d9c6d57902cab20d22c075e42783f9525"
+      "bytes": 6935,
+      "sha256": "4c352d35546cfe092e81d435f69854ce7f5231589cd0146b9b46d3fb9191ea0a"
     },
     {
       "path": "RELEASE_NOTES.md",
-      "bytes": 2583,
-      "sha256": "8b592ed29ed1f324a9f9ed54117691cbbfb9c0b43f7de724b098ca0fb28341c4"
+      "bytes": 2733,
+      "sha256": "36038ee60e21c6c72e7ff06e4a9dc76e776858d70dbabb9c4ffba4a38dc057e7"
     },
     {
       "path": "SECURITY.md",
@@ -59,8 +59,8 @@
     },
     {
       "path": "SKILL.md",
-      "bytes": 31594,
-      "sha256": "bf33eac19440eaa04e0360705a0bb5d028c91e692c73eed8f66a876a3c6b596a"
+      "bytes": 31639,
+      "sha256": "7f52673d734ed8ddf4e83319f3a006c59762622ee0abd065fef914456a8d417c"
     },
     {
       "path": "benchmarks/cases/evaluation_rank_stability/case.json",
@@ -284,8 +284,8 @@
     },
     {
       "path": "docs/competition-workflow.md",
-      "bytes": 6810,
-      "sha256": "04bab149814fffb2d7ae8e48b4e824028ac4d2b441d38f2e3749b050db9401a9"
+      "bytes": 6962,
+      "sha256": "6dcce945cd56a35c1417882103b86d061d3fc0564c42f885ebc0e2cd205d26fa"
     },
     {
       "path": "docs/superpowers/plans/2026-07-12-candidate-solution-tree.md",
@@ -389,8 +389,8 @@
     },
     {
       "path": "references/continuous-optimization-notes.md",
-      "bytes": 20565,
-      "sha256": "cc4a17ad670419b0276e7a4349c38848a6674b6bab2d2ae7d613baf08b1ca640"
+      "bytes": 21293,
+      "sha256": "3dee92c0c046638a42f4c63e959fd5c8b69a1732241ce39de3cb94d6e3920a41"
     },
     {
       "path": "references/domain-checker-template-builder.md",
@@ -419,8 +419,8 @@
     },
     {
       "path": "references/pipeline-runner.md",
-      "bytes": 5311,
-      "sha256": "fcb299a2a5f63fbd2c48f2a0e585a0e02baf04a3652b1b59f109663b0c67f4f7"
+      "bytes": 5705,
+      "sha256": "cd2105dfb465981e2e39df1ae9b3b5b92999abd5d3f5af5300ec36a7ac112e14"
     },
     {
       "path": "references/problem-coverage-tracker.md",
@@ -669,8 +669,8 @@
     },
     {
       "path": "scripts/modeling_pipeline.py",
-      "bytes": 35964,
-      "sha256": "a201328a50623a9dfa652b1c6843e56a0e2a2484d8fb1a7ca2801f8073db1b80"
+      "bytes": 36686,
+      "sha256": "3eed28077fd81f80eae38d684701959fa3f66bc422cafb4b7d37d91d5b23dcba"
     },
     {
       "path": "scripts/problem_coverage_tracker.py",
@@ -714,8 +714,8 @@
     },
     {
       "path": "scripts/tests/test_competition_grade_e2e.py",
-      "bytes": 7789,
-      "sha256": "b60155b0911426c65baacf19839e26048a5469b51e55084d5ed112459e07f1ca"
+      "bytes": 9655,
+      "sha256": "f38a06232794c16434fc3b7cfd851a3360f433528117d8c01127ff3c9676e03a"
     },
     {
       "path": "scripts/tests/test_competition_readiness_truthiness.py",

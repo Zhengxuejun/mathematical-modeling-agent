@@ -119,7 +119,7 @@ data_audit → quality_gate → report_audit → state_update_pre_finalize → f
 06_过程记录/pipeline/pipeline_run_summary.json
 ```
 
-`recommended_status=completed` 表示所有未跳过步骤 exit_code 均为 0；`highest_contiguous_state=S8` 表示状态机证据链闭环。
+当前口径下，`recommended_status=completed` 要求所有未跳过步骤成功、`current_package_published=true` 且 `highest_contiguous_state=S8`；仅有历史 S8 不足以证明本轮完成。
 
 ### Pipeline 严格模式暴露的报告引用问题
 
@@ -494,3 +494,16 @@ references/candidate-solution-tree.md
 选优先执行硬门禁，再按同 case Benchmark、验证分数、目标方向、证据数量、运行时间和稳定 ID 做确定性排序。所有合格候选必须使用相同输入路径/哈希集合；Benchmark 覆盖必须全无或使用同一个 case hash，避免不可比实验被静默混排。
 
 安全边界：工具不执行 `run_record` 命令，不生成模型代码，不调用 LLM，不进行无限搜索。`selected` 只是当前有限树中的最佳合格实验，不更新 `paper_ready`、`final_ready`、`competition_ready`、S0-S8 或提交包。后续可扩展候选生成调度器，但必须保留节点上限、深度上限、人工可审查假设和现有门禁。
+
+## 21. 当前已实现：Pipeline 本轮提交包新鲜度门禁
+
+已修复“项目曾到达 S8，后续重跑被 P0/P1 或竞赛就绪度门禁阻断，摘要仍误报 `completed`”的状态漂移。
+
+新口径：
+
+- `completed` 必须同时有本轮 finalizer 成功和有效 S8；
+- 本轮门禁阻止打包时为 `blocked`；
+- `current_package_published` 显式记录本轮是否发布当前包；
+- 本轮未发布时，保留旧 `07_提交包`但不把其路径或 manifest 统计写入本轮结果。
+
+回归测试使用“首轮成功→新增开放 P1→二轮阻断”的端到端场景，并验证旧 manifest 未被删除也不被冒充为当前产物。

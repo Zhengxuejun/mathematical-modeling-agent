@@ -149,9 +149,9 @@ data_audit
 | `selected` | 候选实验比较 | 建立正式模型、checker 和验证资产 |
 | `final_ready` | 交付物、运行、主张、图表、风险与合规证据 | 继续检查完整竞赛就绪度 |
 | `competition_ready` | 工程、模型、验证、风险分析和论文资产 | 允许生成正式提交包 |
-| `S8 / completed` | 提交包、manifest、校验和及工程状态闭环 | 人工检查最终文件并按官方渠道提交 |
+| `S8 / completed` | 本轮 finalizer 已发布通过 manifest 与校验和验证的当前包 | 人工检查最终文件并按官方渠道提交 |
 
-这些状态都不等于保证数学结论正确或保证获奖。
+这些状态都不等于保证数学结论正确或保证获奖。历史 S8 不代表本轮仍然通过；重跑被门禁阻断时，Pipeline 报告 `blocked` 且 `current_package_published=false`。
 
 ## 7. 失败后的修复回路
 

@@ -102,7 +102,7 @@ python 02_代码/19_candidate_solution_tree.py select
 
 工具不会执行候选命令。只有退出成功、输入哈希一致、可行性与验证通过、证据哈希有效的节点才能参与选优；不同输入快照或不同 Benchmark case 的节点拒绝比较。`selected` 不会自动提升 Contest QC 或 `competition_ready`。详细契约见 [references/candidate-solution-tree.md](references/candidate-solution-tree.md)。
 
-完整流程只有在 `final_ready` 和 `competition_ready` 均通过后才发布 `07_提交包` 并推进到有效 S8。开放 P0/P1、模板内容、项目外证据、失败 manifest、文件缺失或 SHA256 不一致都会阻断交付。
+完整流程只有在 `final_ready` 和 `competition_ready` 均通过后才发布 `07_提交包` 并推进到有效 S8。`completed` 还要求本轮 finalizer 成功；历史 S8 与旧 manifest 不会把被门禁阻断的重跑误报为已完成。开放 P0/P1、模板内容、项目外证据、失败 manifest、文件缺失或 SHA256 不一致都会阻断交付。
 
 ## 验证
 

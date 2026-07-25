@@ -132,6 +132,7 @@ Pipeline 会生成：
 - 最终打包检查 warn/fail；
 - `recommended_status`；
 - `highest_contiguous_state`；
+- `current_package_published`；
 - 提交包目录。
 
 ## 6. 推荐状态口径
@@ -139,9 +140,10 @@ Pipeline 会生成：
 `recommended_status` 同时反映**所选步骤的执行结果**和**S0-S8 项目进度**，避免将局部检查误写成项目完成：
 
 ```text
-completed          所有未跳过步骤成功，且 highest_contiguous_state = S8
+completed          本轮 finalizer 成功发布当前包，且 highest_contiguous_state = S8
 early_stage_passed --skeleton-only 的早期路由/审计步骤成功，但项目尚未完整交付
 in_progress        所有未跳过步骤成功，但 S0-S8 证据尚未到 S8
+blocked            本轮步骤未报错，但 Contest QC 或 competition readiness 等门禁阻止发布当前包
 failed             至少一个未跳过步骤失败
 ```
 
@@ -170,10 +172,11 @@ Pipeline 会在 finalize 前后各运行一次 `update_project_state.py`：
 
 ```text
 highest_contiguous_state = S8
+current_package_published = true
 recommended_status = completed
 ```
 
-如果状态未到 S8，`recommended_status` 必须为 `early_stage_passed` 或 `in_progress`，而不是 `completed`。常见原因：
+历史 S8 只说明磁盘上存在之前验证过的包。若本轮门禁阻止 finalizer，摘要必须为 `blocked`、`current_package_published=false`，且不展示旧包路径或旧 manifest 统计。若状态未到 S8，`recommended_status` 必须为 `early_stage_passed` 或 `in_progress`，而不是 `completed`。常见原因：
 
 - 前序证据缺失，例如 baseline/sensitivity 结果文件命名不符合状态机规则；
 - 用户主动 `--skip-finalize`；

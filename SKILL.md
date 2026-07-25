@@ -50,7 +50,7 @@ metadata:
 - `scripts/create_modeling_project.py`：创建标准数学建模项目目录、状态机、一致性检查表、失败模式记录和质量门禁脚本。
 - `scripts/audit_report_consistency.py`：自动审计报告与结果/图表/数值/单位一致性，输出 auto_report_audit.md/json。
 - `scripts/update_project_state.py`：根据真实产物自动判断 S0-S8 状态；S8 必须通过 manifest v2.0、失败检查、文件清单和 SHA256 验证。
-- `scripts/modeling_pipeline.py`：先完成报告拼装、审计、最终质控和竞赛就绪度检查，再执行原子打包与 S8 更新。仅有效 S8 为 `completed`；`--skeleton-only` 为 `early_stage_passed`，其他未失败项目为 `in_progress`。
+- `scripts/modeling_pipeline.py`：先完成报告拼装、审计、最终质控和竞赛就绪度检查，再执行原子打包与 S8 更新。只有本轮 finalizer 成功发布当前包且有效 S8 才为 `completed`；门禁拦截打包时为 `blocked`，不得沿用历史 S8 或旧 manifest 统计。
 - `scripts/quality_gate_plus.py`：增强质量门禁，检查结果表可读非空、baseline/core/sensitivity、报告逐问痕迹、图表/表格引用、状态与 meta 一致性。
 - `scripts/problem_coverage_tracker.py`：问题小问覆盖追踪器，从 problem_analysis.md 抽取小问并检查报告、结果表、图表是否逐问覆盖。
 - `scripts/result_interpretation_helper.py`：模型结果解释生成器，读取逐问覆盖、结果表和图表，生成每问结论草稿、关键值摘要与风险提示。
